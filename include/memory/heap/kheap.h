@@ -3,8 +3,8 @@
 
 #include "status.h"
 
-#include <stdint.h>
-#include <stddef.h>
+#include "stdint.h"
+#include "stddef.h"
 
 /**
  * Initialize the global kernel heap allocator.

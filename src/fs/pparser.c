@@ -5,11 +5,11 @@
 #include "memory/memory.h"
 #include "status.h"
 
-#include <stdbool.h>
+#include "stdbool.h"
 
 static bool pathparser_is_valid_format(const char* filepath)
 {
-    if (!filepath || strnlen(filepath, MAX_PATH_LENGTH) == 0) {
+    if (!filepath || strnlen(filepath, MAX_PATH) == 0) {
         return false;
     }
 
@@ -158,7 +158,7 @@ status_t pathparser_parse_ex(const char* filepath, const char* current_working_d
 
     *root_out = NULL;
 
-    if (strlen(filepath) > MAX_PATH_LENGTH) {
+    if (strlen(filepath) > MAX_PATH) {
         return STATUS_ERR(EINVAL);
     }
 

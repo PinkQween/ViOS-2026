@@ -163,25 +163,29 @@ status_t fat16_seek(void* internal, uint32_t offset, FILE_SEEK_MODE whence)
 
 status_t fat16_read(struct disk* disk, void* fd, uint32_t size, uint32_t nmemb, char* buffer)
 {
-    int res = STATUS_OK;
-
     struct fat16_file_descriptor* fat_fd = fd;
     struct fat_directory_entry* entry = fat_fd->item.entry;
+    uint32_t total = size * nmemb;
 
-    int offset = fat_fd->pos;
-    char* original_buffer = buffer;
-
-    for (uint32_t i = 0; i < nmemb; i++) {
-        if (status_is_error(res = fat16_read_internal(disk, fat16_get_first_cluster(entry), offset, size, original_buffer + (i * size)))) {
-            return res;
-        }
-    
-        offset += size;
+    if (!entry || !buffer) {
+        return STATUS_ERR(EINVAL);
     }
 
-    res = nmemb;
+    if (total == 0) {
+        return 0;
+    }
 
-    return res;
+    if (fat_fd->pos > entry->file_size || total > entry->file_size - fat_fd->pos) {
+        return STATUS_ERR(EIO);
+    }
+
+    status_t res = fat16_read_internal(disk, fat16_get_first_cluster(entry), fat_fd->pos, total, buffer);
+    if (status_is_error(res)) {
+        return res;
+    }
+
+    fat_fd->pos += total;
+    return nmemb;
 }
 
 void fat16_free_file_descriptor(struct fat16_file_descriptor* internal)

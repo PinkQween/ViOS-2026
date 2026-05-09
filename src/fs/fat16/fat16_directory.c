@@ -213,7 +213,7 @@ struct fat16_item* fat16_new_item_for_entry(struct disk* disk, struct fat_direct
 
 struct fat16_item* fat16_find_item_in_directory(struct disk* disk, struct fat16_directory* directory, const char* name)
 {
-    char tmp_filename[MAX_PATH_LENGTH];
+    char tmp_filename[MAX_PATH];
 
     for (int i = 0; i < directory->entry_count; i++) {
         fat16_get_full_relative_filename(&directory->entries[i], tmp_filename, sizeof(tmp_filename));

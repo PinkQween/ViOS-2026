@@ -1,15 +1,14 @@
 #include "idt/idt.h"
 #include "config.h"
 #include "console/console.h"
-#include "kernel.h"
 #include "io/io.h"
+#include "kernel.h"
 #include "memory/memory.h"
 #include "task/task.h"
+#include "task/process.h"
+#include "string/string.h"
 
-extern void idt_load(struct idtr_desc *ptr);
-extern void isr80h();
-
-extern void* interrupt_pointer_table[TOTAL_INTERRUPTS];
+#include "stdint.h"
 
 static ISR80H_COMMAND isr80h_commands[MAX_ISR80H_COMMANDS];
 static INTERRUPT_CALLBACK interrupt_callbacks[TOTAL_INTERRUPTS];
@@ -29,6 +28,53 @@ static void idt_end_of_interrupt(int interrupt)
     outb(0x20, 0x20);
 }
 
+static const char* idt_exception_name(int interrupt)
+{
+    static const char* names[] = {
+        "Divide Error",
+        "Debug",
+        "Non-maskable Interrupt",
+        "Breakpoint",
+        "Overflow",
+        "Bound Range Exceeded",
+        "Invalid Opcode",
+        "Device Not Available",
+        "Double Fault",
+        "Coprocessor Segment Overrun",
+        "Invalid TSS",
+        "Segment Not Present",
+        "Stack-Segment Fault",
+        "General Protection Fault",
+        "Page Fault",
+        "Reserved",
+        "x87 Floating-Point Exception",
+        "Alignment Check",
+        "Machine Check",
+        "SIMD Floating-Point Exception",
+        "Virtualization Exception",
+        "Control Protection Exception"
+    };
+
+    if (interrupt >= 0 && interrupt < (int)(sizeof(names) / sizeof(names[0]))) {
+        return names[interrupt];
+    }
+
+    return "Reserved Exception";
+}
+
+void idt_handle_error(int interrupt, struct interrupt_frame* frame)
+{
+    process_terminate(task_current()->process);
+    task_next();
+}
+
+static void idt_clock(struct interrupt_frame* frame)
+{
+    (void)frame;
+    outb(0x20, 0x20);
+    task_next();
+}
+
 void interrupt_handler(int interrupt, struct interrupt_frame* frame)
 {
     kernel_page();
@@ -40,16 +86,14 @@ void interrupt_handler(int interrupt, struct interrupt_frame* frame)
             task_current_save_state(frame);
             callback(frame);
         }
+    }    
+
+    if (!callback && interrupt >= 0 && interrupt < 0x20) {
+        idt_handle_error(interrupt, frame);
     }
 
     task_page();
     idt_end_of_interrupt(interrupt);
-}
-
-static void idt_zero(struct interrupt_frame* frame)
-{
-    (void)frame;
-    panic("Zero Division Exception");
 }
 
 status_t idt_register_interrupt_callback(int interrupt, INTERRUPT_CALLBACK callback)
@@ -87,12 +131,12 @@ void idt_init()
         idt_set(i, (uint32_t)interrupt_pointer_table[i], 0x8E);
     }
 
-    status_t res = idt_register_interrupt_callback(0, idt_zero);
-    if (status_is_error(res)) {
-        panic_status("Failed to register divide-by-zero interrupt", res);
-    }
-
     idt_set(0x80, (uint32_t)isr80h, 0xEE);
+
+    status_t res = idt_register_interrupt_callback(0x20, idt_clock);
+    if (status_is_error(res)) {
+        panic_status("Failed to register PIC timer interrupt", res);
+    }
 
     idt_load(&idtr_descriptor);
 }

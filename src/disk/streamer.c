@@ -4,7 +4,7 @@
 #include "config.h"
 #include "status.h"
 
-#include <stdbool.h>
+#include "stdbool.h"
 
 struct disk_streamer* disk_streamer_new(int disk_index) {
     struct disk* disk = disk_get(disk_index);

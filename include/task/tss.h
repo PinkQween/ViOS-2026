@@ -1,7 +1,7 @@
 #ifndef TSS_H
 #define TSS_H
 
-#include <stdint.h>
+#include "stdint.h"
 
 /**
  * Task State Segment (TSS) structure

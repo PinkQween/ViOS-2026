@@ -1,10 +1,8 @@
 global _start
-extern main
+extern c_start
 
-section .asm exec
+section .asm
 
 _start:
-    call main
-
-    ; If main returns, loop indefinitely. until we implement process termination and cleanup.
-    jmp $
+    call c_start
+    ret

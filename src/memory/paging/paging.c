@@ -2,8 +2,8 @@
 #include "memory/heap/kheap.h"
 #include "status.h"
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "stdint.h"
+#include "stdbool.h"
 
 void paging_load_directory(uint32_t* directory);
 
@@ -231,4 +231,18 @@ uint32_t paging_get(uint32_t* directory, void* virtual_address)
 
     uint32_t* table = (uint32_t*)(entry & 0xFFFFF000);
     return table[table_index];
+}
+
+/**
+ * Translate a virtual address to a physical address using the given page directory.
+ * 
+ * @param directory Page directory to use for translation.
+ * @param virtual_address Virtual address to translate.
+ * @return Physical address corresponding to the virtual address, or NULL if not mapped.
+ */
+void* paging_get_physical_address(uint32_t* directory, void* virtual_address)
+{
+    void* virtual_address_new = paging_align_to_lower_page(virtual_address);
+    void* diff = (void*)((uint32_t)virtual_address - (uint32_t)virtual_address_new);
+    return (void*)((paging_get(directory, virtual_address_new) & 0xFFFFF000) + (uint32_t)diff);
 }

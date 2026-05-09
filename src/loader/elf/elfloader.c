@@ -5,7 +5,8 @@
 #include "memory/heap/kheap.h"
 #include "string/string.h"
 #include "config.h"
-#include <stdint.h>
+
+#include "stdint.h"
 
 /**
  * @file elfloader.c
@@ -330,7 +331,7 @@ status_t elf_load_needed_libraries(struct elf_file* file) {
             while (dyn->d_tag != DT_NULL) {
                 if (dyn->d_tag == DT_NEEDED) {
                     const char* libname = file->dynstr + dyn->d_un.d_val;
-                    char path[MAX_PATH_LENGTH];
+                    char path[MAX_PATH];
                     snprintf(path, sizeof(path), "0:/%s", libname);
                     struct elf_file* lib = NULL;
                     if (elf_load(path, &lib) == STATUS_OK) {

@@ -5,16 +5,34 @@
 #include "config.h"
 #include "status.h"
 #include "loader/elf/elfloader.h"
+#include "keyboard/keyboard.h"
+#include "fs/file.h"
 
-#include <stdint.h>
-#include <stddef.h>
-#include "keyboard/keyboard.h"  // For KEYBOARD_BUFFER_SIZE
-#include "fs/file.h"   // For MAX_PATH_LENGTH
+#include "stdint.h"
+#include "stddef.h"
 
 #define PROCESS_TYPE_ELF    0
 #define PROCESS_TYPE_BINARY 1
 
 typedef unsigned char PROCESS_FILE_TYPE;
+
+struct process_allocations
+{
+    void* ptr;
+    size_t size;
+};
+
+struct command_argument
+{
+    char argument[4096];
+    struct command_argument* next;
+};
+
+struct process_arguments
+{
+    char** argv;
+    int argc;
+};
 
 struct keyboard_buffer
 {
@@ -26,9 +44,9 @@ struct keyboard_buffer
 struct process
 {
     uint32_t pid;                        // Process ID
-    char filename[MAX_PATH_LENGTH];       // Executable filename
+    char filename[MAX_PATH];       // Executable filename
     struct task* main_thread;            // Main task/thread of the process
-    void* allocations[MAX_PROGRAM_ALLOCATIONS]; // Dynamic allocations tracked by the process
+    struct process_allocations allocations[MAX_PROGRAM_ALLOCATIONS]; // Dynamic allocations tracked by the process
     PROCESS_FILE_TYPE filetype;          // Type of process: ELF or Binary
 
     union
@@ -40,6 +58,7 @@ struct process
     void* stack;                          // User-space stack pointer
     uint32_t size;                        // Size of the loaded binary
     struct keyboard_buffer keyboard;      // Keyboard input buffer
+    struct process_arguments arguments;   // Command-line arguments
 };
 
 /*-----------------------------------------------------------------------------
@@ -120,6 +139,32 @@ void* process_malloc(struct process* process, size_t size);
  * @param process The process that owns the memory allocation.
  * @param ptr The pointer to the memory to free.
  */
-void process_free(struct process* process, void* ptr)
+void process_free(struct process* process, void* ptr);
+
+/**
+ * Retrieves the command-line arguments for a process.
+ *
+ * @param process The process to retrieve arguments for.
+ * @param argc Out parameter for the argument count.
+ * @param argv Out parameter for the argument array.
+ */
+void process_get_arguments(struct process* process, int* argc, char*** argv);
+
+/**
+ * Copies a linked list of parsed command arguments into a process address space.
+ *
+ * @param process The process that will receive argv/argc.
+ * @param root_arg First parsed command argument.
+ * @return STATUS_OK on success, or an error code on failure.
+ */
+status_t process_inject_arguments(struct process* process, struct command_argument* root_arg);
+
+/**
+ * Terminates a process, freeing all associated resources and removing it from the process list.
+ * 
+ * @param process The process to terminate.
+ * @return STATUS_OK on success, or an error code on failure.
+ */
+status_t process_terminate(struct process* process);
 
 #endif // PROCESS_H

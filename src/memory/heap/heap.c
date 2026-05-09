@@ -2,7 +2,7 @@
 #include "status.h"
 #include "memory/memory.h"
 
-#include <stdbool.h>
+#include "stdbool.h"
 
 static status_t heap_validate_table(void* ptr, void* end, struct heap_table* table)
 {

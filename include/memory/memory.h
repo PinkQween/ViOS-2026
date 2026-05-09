@@ -1,7 +1,7 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
-#include <stddef.h>
+#include "stddef.h"
 
 /**
  * Fill a memory region with a byte value.

@@ -2,8 +2,9 @@
 #define ELFLOADER_H
 
 #include "status.h"
-#include <stddef.h>
-#include <stdint.h>
+
+#include "stddef.h"
+#include "stdint.h"
 
 #define ELFCLASS32 1
 #define ELFCLASS64 2

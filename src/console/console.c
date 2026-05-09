@@ -3,9 +3,9 @@
 #include "io/io.h"
 #include "string/string.h"
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "stdbool.h"
+#include "stddef.h"
+#include "stdint.h"
 
 #define COM1_PORT 0x3F8
 
@@ -187,7 +187,7 @@ void kernel_console_init()
 
 void print_w_color(const char *str, char colour)
 {
-    size_t len = strnlen(str, MAX_PATH_LENGTH);
+    size_t len = strnlen(str, MAX_PATH);
     for (size_t i = 0; i < len; i++)
     {
         if (str[i] == ' ')
@@ -241,4 +241,18 @@ void panic_status(const char *message, status_t status)
     char error_message[256];
     snprintf(error_message, sizeof(error_message), "%s: %s (%d)\n", message, status_to_string(status), status);
     panic(error_message);
+}
+
+void terminal_clear_color_and_reset_cursor(char colour)
+{
+    for (int y = 0; y < VGA_HEIGHT; y++)
+    {
+        for (int x = 0; x < VGA_WIDTH; x++)
+        {
+            terminal_putchar(x, y, ' ', colour);
+        }
+    }
+
+    terminal_row = 0;
+    terminal_column = 0;
 }

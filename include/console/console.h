@@ -85,4 +85,6 @@ void panic_status(const char *message, status_t status);
  */
 char choose_colour(char fg, char bg);
 
+void terminal_clear_color_and_reset_cursor(char colour);
+
 #endif /* CONSOLE_H */

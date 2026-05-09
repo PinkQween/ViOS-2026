@@ -2,6 +2,7 @@
 #define KEYBOARD_H
 
 #include "status.h"
+#include "stdbool.h"
 
 struct process;
 
@@ -11,7 +12,7 @@ typedef int(*KEYBOARD_INIT_FUNCTION)(void);
 struct keyboard
 {
     KEYBOARD_INIT_FUNCTION init;
-
+    bool caps_lock_enabled;
     char name[32];
     struct keyboard* next;
 };
@@ -43,5 +44,21 @@ void keyboard_push(char c);
  * @return The character popped from the keyboard buffer, or 0 if the buffer is empty or no process is currently running.
  */
 char keyboard_pop();
+
+/**
+ * Retrieves the caps lock state for the given keyboard, allowing the system to determine whether caps lock is currently enabled or disabled for that keyboard. This can be used to modify the behavior of character input based on the caps lock state.
+ * 
+ * @param keyboard The keyboard for which to get the caps lock state.
+ * @return True if caps lock is enabled, false if it is disabled.
+ */
+bool keyboard_get_caps_lock(struct keyboard* keyboard);
+
+/**
+ * Sets the caps lock state for the given keyboard, allowing the system to track whether caps lock is enabled or disabled for that keyboard. This can be used to modify the behavior of character input based on the caps lock state.
+ * 
+ * @param keyboard The keyboard for which to set the caps lock state.
+ * @param enabled True to enable caps lock, false to disable it.
+ */
+void keyboard_set_caps_lock(struct keyboard* keyboard, bool enabled);
 
 #endif /* KEYBOARD_H */

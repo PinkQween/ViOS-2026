@@ -1,7 +1,7 @@
 #ifndef STATUS_H
 #define STATUS_H
 
-#include <stdint.h>
+#include "stdint.h"
 
 /**
  * Status code type used throughout the kernel.

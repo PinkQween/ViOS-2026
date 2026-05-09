@@ -1,6 +1,8 @@
 set_policy("check.auto_ignore_flags", false)
 add_rules("mode.debug", "mode.release")
 
+set_policy("build.ccache", false)
+
 -- =========================
 -- TOOLCHAIN
 -- =========================
@@ -17,12 +19,15 @@ toolchain_end()
 -- =========================
 -- PROGRAMS
 -- =========================
+local user_programs = {"blank", "shell", "echo"}
+
 includes("programs/stdlib")
 includes("programs/blank")
-includes("programs/hello")
+includes("programs/shell")
+includes("programs/echo")
 
 -- =========================
--- BOOTLOADER (Legacy BIOS)
+-- BOOTLOADER
 -- =========================
 target("boot")
     set_kind("phony")
@@ -34,12 +39,12 @@ target("boot")
 
         local kernel_size = os.filesize("bin/kernel.bin")
         if not kernel_size then
-            raise("bin/kernel.bin not found; build kernel before boot")
+            raise("bin/kernel.bin not found; build kernel first")
         end
 
         local kernel_sectors = math.ceil(kernel_size / 512)
         if kernel_sectors > 0x1000 then
-            raise(string.format("kernel.bin too large for current bootloader (%d sectors > 0x1000)", kernel_sectors))
+            raise(string.format("kernel too large (%d sectors)", kernel_sectors))
         end
 
         os.exec(string.format(
@@ -47,7 +52,7 @@ target("boot")
             kernel_sectors
         ))
     end)
-
+target_end()
 
 -- =========================
 -- KERNEL ASM
@@ -59,17 +64,19 @@ target("kernel_asm")
     set_toolset("as", "nasm")
     set_objectdir("bin/obj/kernel_asm")
     set_symbols("debug")
-    add_files("src/kernel.asm",
-              "src/idt/idt.asm",
-              "src/io/io.asm",
-              "src/memory/paging/paging.asm",
-              "src/gdt/gdt.asm",
-              "src/task/tss.asm",
-              "src/task/task.asm"
-    )
-    add_asflags("-f elf32")
-    add_asflags("-g", "-F dwarf")
 
+    add_files(
+        "src/kernel.asm",
+        "src/idt/idt.asm",
+        "src/io/io.asm",
+        "src/memory/paging/paging.asm",
+        "src/gdt/gdt.asm",
+        "src/task/tss.asm",
+        "src/task/task.asm"
+    )
+
+    add_asflags("-f elf32", "-g", "-F dwarf")
+target_end()
 
 -- =========================
 -- KERNEL C
@@ -77,21 +84,29 @@ target("kernel_asm")
 target("kernel_c")
     set_kind("object")
     set_toolchains("i686-elf")
+    set_languages("gnu99")
 
-    add_includedirs("include")
+    add_includedirs("include", {public = true})
+    add_cflags("-Iinclude", "-nostdinc")
+    
     set_objectdir("bin/obj/kernel_c")
     set_symbols("debug")
-    add_files("src/kernel.c", "src/**/*.c")
+
+    add_files("src/*.c", "src/**/*.c")
+
     add_cflags(
         "-ffreestanding",
+        "-nostdinc",
+        "-Iinclude",
         "-g",
         "-O0",
         "-fno-builtin",
         "-m32",
         "-fno-pic",
-        "-fno-pie"
+        "-fno-pie",
+        "-fno-stack-protector"
     )
-
+target_end()
 
 -- =========================
 -- KERNEL LINK
@@ -99,10 +114,10 @@ target("kernel_c")
 target("kernel")
     set_kind("binary")
     set_toolchains("i686-elf")
+
     set_symbols("debug")
     set_targetdir("bin")
     set_filename("kernel.bin")
-    set_toolset("ld", "i686-elf-ld")
 
     add_deps("kernel_asm", "kernel_c")
 
@@ -112,6 +127,7 @@ target("kernel")
         "-nostdlib",
         "--no-pie"
     )
+target_end()
 
 -- =========================
 -- ASSETS
@@ -119,15 +135,19 @@ target("kernel")
 target("assets")
     set_kind("phony")
     set_default(false)
-    add_deps("vios", "hello", "blank")
+    add_deps("libvios", "blank", "shell", "echo")
 
     on_build(function ()
+        os.rm("bin/assets")
         os.exec("mkdir -p bin/assets")
-        
-        -- Copy built programs to bin/assets directory
-        os.cp("assets/*.elf", "bin/assets/")
-        os.cp("assets/*.a", "bin/assets/")
+
+        for _, program in ipairs(user_programs) do
+            local src = "assets/" .. program .. ".elf"
+            local dst = "bin/assets/" .. program  -- remove .elf
+            os.cp(src, dst)
+        end
     end)
+target_end()
 
 -- =========================
 -- IMAGE
@@ -144,7 +164,8 @@ target("image")
         os.exec("mformat -i bin/os.bin -t 1024 -h 1 -n 32 -B bin/boot.bin ::")
         os.exec("dd if=bin/kernel.bin of=bin/os.bin bs=512 seek=400 conv=notrunc status=none")
 
-        if os.isdir("assets") then
-            os.exec('sh -c "ls assets/* >/dev/null 2>&1 && mcopy -o -i bin/os.bin -s assets/* :: || true"')
+        for _, program in ipairs(user_programs) do
+            os.exec("mcopy -o -i bin/os.bin bin/assets/" .. program .. " ::")
         end
     end)
+target_end()

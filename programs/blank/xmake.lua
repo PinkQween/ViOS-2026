@@ -1,19 +1,11 @@
 target("blank")
-    set_kind("binary")
-    set_toolchains("i686-elf")
-    set_targetdir("../../assets")
-    set_filename("blank.elf")
-    set_toolset("ld", "i686-elf-ld")
-    set_toolset("as", "nasm")
-    
-    after_load(function (target)
-        target:add("deps", "vios", {inherit = false})
+    set_kind("phony")
+    set_default(false)
+    add_deps("libvios")
+
+    on_build(function ()
+        os.exec("mkdir -p programs/blank/build assets")
+        os.exec("i686-elf-gcc -c -std=gnu99 -ffreestanding -nostdinc -nostdlib -fno-builtin -m32 -fno-pic -fno-pie -fno-stack-protector -g -O0 -Iprograms/stdlib/include programs/blank/blank.c -o programs/blank/build/blank.o")
+        os.exec("i686-elf-ld -m elf_i386 -T programs/blank/linker.ld -nostdlib -o assets/blank.elf programs/stdlib/build/start.o programs/blank/build/blank.o assets/libvios.a")
     end)
-    
-    add_files("blank.c")
-    add_files("../stdlib/src/start.asm")
-    add_includedirs("../stdlib/include")
-    
-    add_cflags("-m32", "-ffreestanding", "-fno-builtin", "-fno-pic", "-fno-pie", "-g")
-    add_asflags("-f", "elf32")
-    add_ldflags("-m", "elf_i386", "-T", "$(projectdir)/programs/blank/linker.ld", "-nostdlib", "$(projectdir)/assets/libvios.a")
+target_end()

@@ -46,6 +46,9 @@ step2:
     mov ds, ax
     mov es, ax
     mov ss, ax
+    mov fs, ax
+    mov es, ax
+
     mov sp, 0x7C00
 
     sti

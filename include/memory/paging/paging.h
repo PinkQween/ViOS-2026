@@ -3,8 +3,8 @@
 
 #include "status.h"
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "stdint.h"
+#include "stdbool.h"
 
 /** Page entry flag: disable CPU cache for mapped page. */
 #define PAGING_CACHE_DISABLED       0b00010000
@@ -150,5 +150,14 @@ uint32_t paging_get(uint32_t* directory, void* virtual_address);
  * @return STATUS_OK on success, negative status_t on error.
  */
 status_t paging_map(struct paging_4gb_chunk* directory, void* virtual_address, void* physical_address, uint8_t flags);
+
+/**
+ * Get the physical address mapped to a virtual address in the given directory.
+ *
+ * @param directory Page directory to query.
+ * @param virtual_address Virtual address to translate.
+ * @return Physical address mapped to the virtual address, or NULL if not mapped.
+ */
+void* paging_get_physical_address(uint32_t* directory, void* virtual_address);
 
 #endif /* PAGING_H */

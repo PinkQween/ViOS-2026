@@ -1,7 +1,7 @@
 #ifndef IO_H
 #define IO_H
 
-#include <stdint.h>
+#include "stdint.h"
 
 /**
  * Read count bytes from IO port into a memory buffer.

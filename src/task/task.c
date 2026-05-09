@@ -66,7 +66,7 @@ status_t task_init(struct task* task, struct process* process)
     task->registers.ss = USER_DATA_SEGMENT;
     task->registers.cs = USER_CODE_SEGMENT;
     task->registers.flags = 0x202;
-    task->registers.esp = PROGRAM_VIRTUAL_ADDRESS_STACK_START;
+    task->registers.esp = PROGRAM_VIRTUAL_STACK_ADDRESS_START;
 
     task->process = process;
 
@@ -134,6 +134,8 @@ void task_run_root_task()
     if (status_is_error(res)) {
         panic_status("Failed to switch to root task", res);
     }
+
+    terminal_clear_color_and_reset_cursor(choose_colour(WHITE, BLACK));
 
     task_return(&task_head->registers);
 }
@@ -223,4 +225,26 @@ void* task_get_stack_item(struct task* task, int index)
     kernel_page();
 
     return item;
+}
+
+void* task_virtual_to_physical(struct task* task, void* virtual_address)
+{
+    if (!task || !task->page_directory || !virtual_address) {
+        return NULL;
+    }
+    
+    return paging_get_physical_address(task->page_directory->directory_entry, virtual_address);
+}
+
+void task_next()
+{
+    struct task* next_task = task_get_next(current_task);
+
+    if (!next_task) {
+        task_run_root_task();
+        return;
+    }
+
+    task_switch(next_task);
+    task_return(&next_task->registers);
 }

@@ -14,21 +14,20 @@
 #include "task/task.h"
 #include "task/tss.h"
 
-#include <stdint.h>
+#include "stdint.h"
 
 struct paging_4gb_chunk *kernel_chunk = 0;
 struct tss tss;
 
 struct gdt_entry gdt_real[TOTAL_GDT_SEGMENTS];
 struct gdt_structured gdt_structured_real[TOTAL_GDT_SEGMENTS] = {
-    { .base = 0x00000000, .limit = 0x00000000, .type = 0x00 },
-    { .base = 0x00000000, .limit = 0xFFFFFFFF, .type = 0x9A },
-    { .base = 0x00000000, .limit = 0xFFFFFFFF, .type = 0x92 },
-    { .base = 0x00000000, .limit = 0xFFFFFFFF, .type = 0xFA },
-    { .base = 0x00000000, .limit = 0xFFFFFFFF, .type = 0xF2 },
-    { .base = (uint32_t)&tss, .limit = (uint32_t)(sizeof(struct tss) - 1), .type = 0xE9 }
+    { 0x00000000, 0x00000000, 0x00 },
+    { 0x00000000, 0xFFFFFFFF, 0x9A },
+    { 0x00000000, 0xFFFFFFFF, 0x92 },
+    { 0x00000000, 0xFFFFFFFF, 0xFA },
+    { 0x00000000, 0xFFFFFFFF, 0xF2 },
+    { (uint32_t)&tss, sizeof(struct tss) - 1, 0xE9 }
 };
-
 void kernel_page()
 {
     kernel_registers();
@@ -99,8 +98,8 @@ static void kernel_setup_paging()
 static void kernel_load_init_process()
 {
     struct process* process = 0;
-    status_t status = process_load_switch("0:/hello.elf", &process);
-    panic_if_error("Failed to load process", status);
+    status_t status = process_load_switch(ROOT_PROCESS_PATH, &process);
+    panic_if_error("Failed to load root process", status);
 }
 
 void kernel_main()

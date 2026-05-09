@@ -45,12 +45,9 @@ struct task
 struct task* task_current();
 
 /**
- * Returns the next task in the task list.
- * 
- * @param task The task to get the next task of.
- * @return The next task in the task list.
+ * Switches to the next task in the task list, saving the state of the current task and restoring the state of the next task. This function is called by the scheduler to perform a context switch between tasks.
  */
-struct task* task_next(struct task* task);
+void task_next();
 
 /**
  * Frees a task and removes it from the task list.
@@ -150,5 +147,14 @@ status_t copy_string_from_task(struct task* task, void* dest, const char* src, i
  * @return A pointer to the requested stack item.
  */
 void* task_get_stack_item(struct task* task, int index);
+
+/**
+ * Translates a virtual address in the task's address space to a physical address. This function is used to access memory in the task's address space from the kernel.
+ * 
+ * @param task The task whose address space to translate.
+ * @param virtual_address The virtual address to translate.
+ * @return The physical address corresponding to the virtual address, or NULL if the virtual address is
+ */
+void* task_virtual_to_physical(struct task* task, void* virtual_address);
 
 #endif // TASK_H

@@ -82,3 +82,13 @@ char keyboard_pop()
 
     return c;
 }
+
+void keyboard_set_caps_lock(struct keyboard* keyboard, bool enabled)
+{
+    keyboard->caps_lock_enabled = enabled;
+}
+
+bool keyboard_get_caps_lock(struct keyboard* keyboard)
+{
+    return keyboard->caps_lock_enabled;
+}

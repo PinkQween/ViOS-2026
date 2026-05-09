@@ -4,8 +4,8 @@
 #include "config.h"
 #include "status.h"
 
-#include <stdint.h>
-#include <stddef.h>
+#include "stdint.h"
+#include "stddef.h"
 
 /** Heap table marker for an allocated block. */
 #define HEAP_BLOCK_TABLE_ENTRY_TAKEN 1
