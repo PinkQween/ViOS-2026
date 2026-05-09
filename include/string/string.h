@@ -76,6 +76,26 @@ int sscanf(const char *str, const char *format, ...);
 char *strcpy(char *dest, const char *src);
 
 /**
+ * Copy a null-terminated source string into a bounded destination.
+ *
+ * @param dest Destination buffer.
+ * @param dest_size Total capacity of destination buffer.
+ * @param src Source string.
+ * @return true if the full source fit, otherwise false after truncating.
+ */
+bool safe_strcpy(char *dest, size_t dest_size, const char *src);
+
+/**
+ * Append a null-terminated source string to a bounded destination.
+ *
+ * @param dest Destination buffer containing an existing string.
+ * @param dest_size Total capacity of destination buffer.
+ * @param src Source string to append.
+ * @return true if the full source fit, otherwise false after truncating.
+ */
+bool safe_strcat(char *dest, size_t dest_size, const char *src);
+
+/**
  * Copy up to n characters from source string to destination, null-terminating if possible.
  * 
  * @param dest Destination buffer.

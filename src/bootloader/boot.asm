@@ -1,94 +1,99 @@
-ORG 0x7C00
-BITS 16
-
-CODE_SEG equ gdt_code - gdt_start
-DATA_SEG equ gdt_data - gdt_start
-KERNEL_LBA_START equ 400
-; ATA sector count register is 8-bit (1..255, with 0 meaning 256).
-; Default can be overridden by build system.
+;--------------------------------------
+; ViOS Bootloader
+;--------------------------------------
+; Assembles to 512 bytes, loads kernel, switches to protected mode
+;--------------------------------------
+%define CODE_SEG 0x08
+%define DATA_SEG 0x10
+%ifndef KERNEL_LBA_START
+%define KERNEL_LBA_START 400
+%endif
 %ifndef KERNEL_SECTOR_COUNT
-KERNEL_SECTOR_COUNT equ 0x1000
+%define KERNEL_SECTOR_COUNT 0x1000
 %endif
 
-jmp short start
+[BITS 16]
+ORG 0x7C00
+
+jmp start
 nop
 
-; FAT16 Header
+;-----------------------------
+; FAT16 / Boot record header (decimal for high bytes)
+;-----------------------------
 OEMIdentifier       db "ViOSKERN"
-BytesPerSector      dw 0x200
-SectorsPerCluster   db 0x80
+BytesPerSector      dw 512
+SectorsPerCluster   db 8
 ReservedSectors     dw 200
 FATCopies           db 2
 RootDirEntries      dw 512
 NumSectors          dw 0
-MediaType           db 0xF8
-SectorsPerFAT       dw 0x100
-SectorsPerTrack     dw 0x20
-NumberOfHeads       dw 0x40
+MediaType           db 248         ; 0xF8
+SectorsPerFAT       dw 256         ; 0x100
+SectorsPerTrack     dw 32
+NumberOfHeads       dw 64
 HiddenSectors       dd 0
-SectorsBig          dd 0x773594
+SectorsBig          dd 7755188      ; 0x773594
 
-; Extended BPB (Dos 4.0)
-DriveNumber         db 0x80
+DriveNumber         db 128         ; 0x80
 WinNTBits           db 0
-Signature           db 0x29
+Signature           db 41          ; 0x29
 VolumeID            dd 0xD105
 VolumeIDString      db "ViOS boot  "
 FileSystemType      db "FAT16   "
 
+;-----------------------------
+; Bootloader entry
+;-----------------------------
 start:
-    jmp 0:step2
-
-step2:
     cli
-
-    mov ax, 0
+    xor ax, ax
     mov ds, ax
     mov es, ax
     mov ss, ax
-    mov fs, ax
-    mov es, ax
-
     mov sp, 0x7C00
-
     sti
 
-.load_protected:
+;-----------------------------
+; Load GDT and switch to protected mode
+;-----------------------------
+load_protected:
     cli
-    lgdt [gdt_descriptor]
+    lgdt [gdt_descriptor]        ; load GDT
     mov eax, cr0
-    or eax, 1
+    or eax, 1                    ; enable protected mode
     mov cr0, eax
-    jmp CODE_SEG:load32
+    jmp CODE_SEG:load32          ; far jump to 32-bit loader
 
-        
-; GDT
+;-----------------------------
+; GDT (Global Descriptor Table)
+;-----------------------------
 gdt_start:
-gdt_null:
-    dd 0
-    dd 0
+gdt_null:      dd 0, 0
 
-gdt_code:
-    dw 0xFFFF
-    dw 0
-    db 0
-    db 0x9A
-    db 11001111b
-    db 0
+gdt_code:      dw 0xFFFF
+               dw 0
+               db 0x00
+               db 0x9A
+               db 0xCF
+               db 0x00
 
-gdt_data:
-    dw 0xFFFF
-    dw 0
-    db 0
-    db 0x92
-    db 11001111b
-    db 0
+gdt_data:      dw 0xFFFF
+               dw 0
+               db 0x00
+               db 0x92
+               db 0xCF
+               db 0x00
 
 gdt_end:
+
 gdt_descriptor:
     dw gdt_end - gdt_start - 1
     dd gdt_start
-    
+
+;-----------------------------
+; 32-bit loader entry point
+;-----------------------------
 [BITS 32]
 load32:
     mov ax, DATA_SEG
@@ -97,63 +102,85 @@ load32:
     mov fs, ax
     mov gs, ax
     mov ss, ax
-    mov esp, 0x90000
+    mov esp, 0x90000             ; 32-bit stack
 
+    ; Enable A20 line
     in al, 0x92
-    or al, 0x02
+    or al, 2
     out 0x92, al
 
+    ; Load kernel from disk (LBA)
     mov eax, KERNEL_LBA_START
     mov ecx, KERNEL_SECTOR_COUNT
     mov edi, 0x0100000
     call ata_lba_read
+
+    ; Jump to loaded kernel
     jmp CODE_SEG:0x0100000
 
+;-----------------------------
+; ATA LBA Sector Read
+;-----------------------------
 ata_lba_read:
-    mov ebx, eax
-    shl eax, 24
-    or eax, 0xE0
+    push ebp
+    push esi
+    mov esi, eax
+    mov ebp, ecx
+
+.next_sector:
+    test ebp, ebp
+    jz .done
+
+    mov eax, esi
+    shr eax, 24
+    and al, 0x0F
+    or al, 0xE0
     mov dx, 0x1F6
     out dx, al
-    
-    mov eax, ecx
+
+    mov al, 1
     mov dx, 0x1F2
     out dx, al
 
-    mov eax, ebx
+    mov eax, esi
     mov dx, 0x1F3
     out dx, al
 
     mov dx, 0x1F4
-    mov eax, ebx
     shr eax, 8
     out dx, al
 
     mov dx, 0x1F5
-    mov eax, ebx
-    shr eax, 16
+    shr eax, 8
     out dx, al
 
+    mov al, 32
     mov dx, 0x1F7
-    mov al, 0x20
     out dx, al
 
-.next_sector:
-    push ecx
-
-.try_again:
-    mov dx, 0x1F7
+.wait_ready:
     in al, dx
-    test al, 8
-    jz .try_again
+    test al, 0x80
+    jnz .wait_ready
+    test al, 0x08
+    jz .wait_ready
 
     mov ecx, 256
     mov dx, 0x1F0
+    cld
     rep insw
-    pop ecx
-    loop .next_sector
 
+    inc esi
+    dec ebp
+    jmp .next_sector
+
+.done:
+    pop esi
+    pop ebp
     ret
 
+;-----------------------------
+; Pad to 512 bytes (boot sector)
+;-----------------------------
 times 510-($-$$) db 0
 dw 0xAA55

@@ -13,6 +13,100 @@
  * @brief Comprehensive ELF32 Loader with Dynamic Linking support.
  */
 
+#define ELF_MAX_FILE_SIZE (1024 * 1024)
+#define ELF_SEGMENT_BSS_SLACK 4096
+
+static bool elf_range_in_file(uint32_t offset, uint32_t size, uint32_t file_size)
+{
+    if (offset > file_size) {
+        return false;
+    }
+
+    return size <= file_size - offset;
+}
+
+static void* elf_file_ptr(struct elf_file* file, uint32_t offset, uint32_t size)
+{
+    if (!file || !elf_range_in_file(offset, size, file->in_memory_size)) {
+        return NULL;
+    }
+
+    return (void*)((uintptr_t)file->elf_memory + offset);
+}
+
+static status_t elf_validate32(struct elf32_header* header, uint32_t file_size)
+{
+    if (!header || file_size < sizeof(struct elf32_header)) {
+        return STATUS_ERR(EINVAL);
+    }
+
+    if (!elf_is_valid(header) ||
+        header->e_ident[EI_CLASS] != ELFCLASS32 ||
+        header->e_ident[EI_DATA] != ELFDATA2LSB ||
+        header->e_ident[EI_VERSION] != EV_CURRENT ||
+        header->e_type != ET_EXEC ||
+        header->e_machine != EM_386 ||
+        header->e_version != EV_CURRENT ||
+        header->e_ehsize != sizeof(struct elf32_header) ||
+        header->e_phentsize != sizeof(struct elf32_phdr)) {
+        return STATUS_ERR(EINVAL);
+    }
+
+    if (header->e_phnum == 0 ||
+        header->e_phnum > ELF_MAX_SEGMENTS ||
+        !elf_range_in_file(header->e_phoff, header->e_phnum * header->e_phentsize, file_size)) {
+        return STATUS_ERR(EINVAL);
+    }
+
+    if (header->e_shoff != 0) {
+        if (header->e_shentsize != sizeof(struct elf32_shdr) ||
+            !elf_range_in_file(header->e_shoff, header->e_shnum * header->e_shentsize, file_size)) {
+            return STATUS_ERR(EINVAL);
+        }
+    }
+
+    bool entry_in_load_segment = false;
+    for (int i = 0; i < header->e_phnum; i++) {
+        struct elf32_phdr* phdr = (struct elf32_phdr*)((uintptr_t)header + header->e_phoff + i * header->e_phentsize);
+
+        if (phdr->p_filesz > phdr->p_memsz) {
+            return STATUS_ERR(EINVAL);
+        }
+
+        if (phdr->p_filesz && !elf_range_in_file(phdr->p_offset, phdr->p_filesz, file_size)) {
+            return STATUS_ERR(EINVAL);
+        }
+
+        if (phdr->p_memsz > phdr->p_filesz + ELF_SEGMENT_BSS_SLACK) {
+            return STATUS_ERR(EINVAL);
+        }
+
+        if (phdr->p_type == PT_LOAD &&
+            phdr->p_vaddr <= 0xFFFFFFFFu - phdr->p_memsz &&
+            header->e_entry >= phdr->p_vaddr &&
+            header->e_entry < phdr->p_vaddr + phdr->p_memsz) {
+            entry_in_load_segment = true;
+        }
+    }
+
+    return entry_in_load_segment ? STATUS_OK : STATUS_ERR(EINVAL);
+}
+
+static void* elf_vaddr_to_file_ptr(struct elf_file* file, uintptr_t vaddr, size_t size)
+{
+    for (int i = 0; i < file->segment_count; i++) {
+        struct elf_segment* seg = &file->segments[i];
+        uintptr_t start = (uintptr_t)seg->vaddr;
+        uintptr_t end = start + seg->filesz;
+
+        if (end >= start && vaddr >= start && vaddr <= end && size <= end - vaddr) {
+            return (void*)((uintptr_t)seg->paddr + (vaddr - start));
+        }
+    }
+
+    return NULL;
+}
+
 struct elf_file* elf_file_new() {
     return kzalloc(sizeof(struct elf_file));
 }
@@ -47,26 +141,26 @@ static status_t elf_process_phdr32(struct elf_file* file, struct elf32_header* h
             if (file->segment_count >= ELF_MAX_SEGMENTS) return STATUS_ERR(ENOMEM);
             struct elf_segment* seg = &file->segments[file->segment_count++];
             seg->vaddr = (void*)(uintptr_t)phdr->p_vaddr;
-            seg->paddr = (void*)((uintptr_t)file->elf_memory + phdr->p_offset);
+            seg->paddr = elf_file_ptr(file, phdr->p_offset, phdr->p_filesz);
             seg->memsz = phdr->p_memsz;
             seg->filesz = phdr->p_filesz;
             seg->flags = phdr->p_flags;
         } else if (phdr->p_type == PT_DYNAMIC) {
             struct elf32_dyn* dyn = elf32_get_dynamic(header, phdr);
-            while (dyn->d_tag != DT_NULL) {
+            int dyn_count = phdr->p_filesz / sizeof(struct elf32_dyn);
+            for (int dyn_index = 0; dyn_index < dyn_count && dyn->d_tag != DT_NULL; dyn_index++, dyn++) {
                 switch (dyn->d_tag) {
-                    case DT_SYMTAB:    file->dynsym = (void*)((uintptr_t)file->elf_memory + dyn->d_un.d_ptr - (uintptr_t)file->base_address); break;
-                    case DT_STRTAB:    file->dynstr = (char*)((uintptr_t)file->elf_memory + dyn->d_un.d_ptr - (uintptr_t)file->base_address); break;
-                    case DT_REL:       file->rel = (void*)((uintptr_t)file->elf_memory + dyn->d_un.d_ptr - (uintptr_t)file->base_address); break;
+                    case DT_SYMTAB:    file->dynsym = elf_vaddr_to_file_ptr(file, dyn->d_un.d_ptr, sizeof(struct elf32_sym)); break;
+                    case DT_STRTAB:    file->dynstr = elf_vaddr_to_file_ptr(file, dyn->d_un.d_ptr, 1); break;
+                    case DT_REL:       file->rel = elf_vaddr_to_file_ptr(file, dyn->d_un.d_ptr, sizeof(struct elf32_rel)); break;
                     case DT_RELSZ:     file->rel_size = dyn->d_un.d_val; break;
-                    case DT_RELA:      file->rela = (void*)((uintptr_t)file->elf_memory + dyn->d_un.d_ptr - (uintptr_t)file->base_address); break;
+                    case DT_RELA:      file->rela = elf_vaddr_to_file_ptr(file, dyn->d_un.d_ptr, sizeof(struct elf32_rela)); break;
                     case DT_RELASZ:    file->rela_size = dyn->d_un.d_val; break;
-                    case DT_JMPREL:    file->jmprel = (void*)((uintptr_t)file->elf_memory + dyn->d_un.d_ptr - (uintptr_t)file->base_address); break;
+                    case DT_JMPREL:    file->jmprel = elf_vaddr_to_file_ptr(file, dyn->d_un.d_ptr, sizeof(struct elf32_rel)); break;
                     case DT_PLTRELSZ:  file->jmprel_size = dyn->d_un.d_val; break;
-                    case DT_HASH:      file->hash = (void*)((uintptr_t)file->elf_memory + dyn->d_un.d_ptr - (uintptr_t)file->base_address); break;
-                    case DT_PLTGOT:    file->pltgot = (void*)((uintptr_t)file->elf_memory + dyn->d_un.d_ptr - (uintptr_t)file->base_address); break;
+                    case DT_HASH:      file->hash = elf_vaddr_to_file_ptr(file, dyn->d_un.d_ptr, sizeof(uint32_t) * 2); break;
+                    case DT_PLTGOT:    file->pltgot = elf_vaddr_to_file_ptr(file, dyn->d_un.d_ptr, sizeof(uint32_t)); break;
                 }
-                dyn++;
             }
         }
     }
@@ -77,11 +171,19 @@ static status_t elf_process_phdr32(struct elf_file* file, struct elf32_header* h
  * @brief Loads an ELF file from disk into memory.
  */
 status_t elf_load(const char* filename, struct elf_file** file_out) {
+    if (!filename || !file_out) {
+        return STATUS_ERR(EINVAL);
+    }
+
     status_t fd = fopen(filename, "rb");
     if (status_is_error(fd)) return fd;
 
     struct file_stat stat;
     fstat(fd, &stat);
+    if (stat.size < sizeof(struct elf32_header) || stat.size > ELF_MAX_FILE_SIZE) {
+        fclose(fd);
+        return STATUS_ERR(EINVAL);
+    }
 
     // Allocate slightly more for potential unaligned access or stubs
     void* elf_memory = kzalloc(stat.size + 4096);
@@ -97,9 +199,10 @@ status_t elf_load(const char* filename, struct elf_file** file_out) {
     }
     fclose(fd);
 
-    if (!elf_is_valid(elf_memory)) {
+    status_t res = elf_validate32((struct elf32_header*)elf_memory, stat.size);
+    if (status_is_error(res)) {
         kfree(elf_memory);
-        return STATUS_ERR(EINVAL);
+        return res;
     }
 
     struct elf_file* file = elf_file_new();
@@ -114,9 +217,14 @@ status_t elf_load(const char* filename, struct elf_file** file_out) {
 
     if (elf_is_32bit(elf_memory)) {
         file->elf_class = ELFCLASS32;
-        elf_process_phdr32(file, (struct elf32_header*)elf_memory);
+        res = elf_process_phdr32(file, (struct elf32_header*)elf_memory);
+        if (status_is_error(res)) {
+            elf_file_free(file);
+            return res;
+        }
     } else {
-        file->elf_class = ELFCLASS64;
+        elf_file_free(file);
+        return STATUS_ERR(EINVAL);
     }
 
     *file_out = file;

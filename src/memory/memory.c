@@ -21,6 +21,16 @@ void *memcpy(void *dest, const void *src, size_t size)
     return dest;
 }
 
+bool safe_memcpy(void *dest, size_t dest_size, const void *src, size_t size)
+{
+    if (!dest || !src || size > dest_size) {
+        return false;
+    }
+
+    memcpy(dest, src, size);
+    return true;
+}
+
 int memcmp(const void *ptr1, const void *ptr2, size_t count)
 {
     const char *c_ptr1 = (const char *)ptr1;

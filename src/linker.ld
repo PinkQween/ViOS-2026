@@ -28,4 +28,12 @@ SECTIONS
         *(COMMON)
         *(.bss)
     }
+
+    .kernel_stack (NOLOAD) : ALIGN(4096)
+    {
+        . = ALIGN(16);
+        kernel_stack_bottom = .;
+        . += 64K;
+        kernel_stack_top = .;
+    }
 }

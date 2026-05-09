@@ -30,6 +30,7 @@ struct interrupt_frame {
 
 void idt_init(void);
 void idt_load(struct idtr_desc* ptr);
+void idt_unmask_irq(uint8_t irq);
 void isr80h(void);
 extern void* interrupt_pointer_table[TOTAL_INTERRUPTS];
 void idt_handle_error(int interrupt, struct interrupt_frame* frame);

@@ -563,6 +563,46 @@ char* strcpy(char *dest, const char *src)
     return dest;
 }
 
+bool safe_strcpy(char *dest, size_t dest_size, const char *src)
+{
+    size_t i = 0;
+
+    if (!dest || dest_size == 0) {
+        return false;
+    }
+
+    if (!src) {
+        dest[0] = '\0';
+        return false;
+    }
+
+    while (i + 1 < dest_size && src[i] != '\0')
+    {
+        dest[i] = src[i];
+        i++;
+    }
+
+    dest[i] = '\0';
+    return src[i] == '\0';
+}
+
+bool safe_strcat(char *dest, size_t dest_size, const char *src)
+{
+    size_t len;
+
+    if (!dest || dest_size == 0) {
+        return false;
+    }
+
+    len = strnlen(dest, dest_size);
+    if (len >= dest_size) {
+        dest[dest_size - 1] = '\0';
+        return false;
+    }
+
+    return safe_strcpy(dest + len, dest_size - len, src);
+}
+
 char *strncpy(char *dest, const char *src, size_t n)
 {
     char *ptr = dest;

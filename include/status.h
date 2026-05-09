@@ -31,6 +31,7 @@ typedef int32_t status_t;
 #define EINVAL       22  /* Invalid argument */
 #define ENOSPC       28  /* No space left */
 #define ENOSYS       38  /* Not implemented */
+#define ENAMETOOLONG 91  /* File or path name too long */
 
 /* =========================
  * Core helpers
@@ -120,6 +121,7 @@ static inline const char* status_to_string(status_t s) {
         case EINVAL: return "EINVAL";
         case ENOSPC: return "ENOSPC";
         case ENOSYS: return "ENOSYS";
+        case ENAMETOOLONG: return "ENAMETOOLONG";
         default: return "UNKNOWN_ERROR";
     }
 }

@@ -20,6 +20,7 @@ toolchain_end()
 -- PROGRAMS
 -- =========================
 local user_programs = {"blank", "shell", "echo"}
+local kernel_sector_offset = 400
 
 includes("programs/stdlib")
 includes("programs/blank")
@@ -48,7 +49,8 @@ target("boot")
         end
 
         os.exec(string.format(
-            "nasm -f bin -DKERNEL_SECTOR_COUNT=%d src/bootloader/boot.asm -o bin/boot.bin",
+            "nasm -f bin -DKERNEL_LBA_START=%d -DKERNEL_SECTOR_COUNT=%d src/bootloader/boot.asm -o bin/boot.bin",
+            kernel_sector_offset,
             kernel_sectors
         ))
     end)
@@ -162,7 +164,10 @@ target("image")
 
         os.exec("dd if=/dev/zero of=bin/os.bin bs=1M count=16 status=none")
         os.exec("mformat -i bin/os.bin -t 1024 -h 1 -n 32 -B bin/boot.bin ::")
-        os.exec("dd if=bin/kernel.bin of=bin/os.bin bs=512 seek=400 conv=notrunc status=none")
+        os.exec(string.format(
+            "dd if=bin/kernel.bin of=bin/os.bin bs=512 seek=%d conv=notrunc status=none",
+            kernel_sector_offset
+        ))
 
         for _, program in ipairs(user_programs) do
             os.exec("mcopy -o -i bin/os.bin bin/assets/" .. program .. " ::")

@@ -7,6 +7,7 @@
  * @return None.
  */
 extern void enable_interrupts();
+extern void kernel_idle();
 
 /**
  * Kernel entry point after low-level boot setup.

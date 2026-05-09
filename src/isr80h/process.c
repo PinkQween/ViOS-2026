@@ -16,8 +16,10 @@ void* isr80h_command5_process_load_start(struct interrupt_frame* frame)
     }
 
     char path[MAX_PATH];
-    strcpy(path, "0:/");
-    strcpy(path + 3, filename);
+    if (!safe_strcpy(path, sizeof(path), "0:/") ||
+        !safe_strcat(path, sizeof(path), filename)) {
+        return (void*)STATUS_ERR(ENAMETOOLONG);
+    }
 
     struct process* process = 0;
     res = process_load_switch(path, &process);
@@ -45,8 +47,10 @@ void* isr80h_command6_invoke_system_command(struct interrupt_frame* frame)
     const char* program_name = root_command_argument->argument;
 
     char path[MAX_PATH];
-    strcpy(path, "0:/");
-    strncpy(path + 3, program_name, sizeof(path));
+    if (!safe_strcpy(path, sizeof(path), "0:/") ||
+        !safe_strcat(path, sizeof(path), program_name)) {
+        return (void*)STATUS_ERR(ENAMETOOLONG);
+    }
 
     struct process* process = 0;
     status_t res = process_load_switch(path, &process);

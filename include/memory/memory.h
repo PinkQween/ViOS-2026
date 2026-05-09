@@ -2,6 +2,7 @@
 #define MEMORY_H
 
 #include "stddef.h"
+#include "stdbool.h"
 
 /**
  * Fill a memory region with a byte value.
@@ -22,6 +23,17 @@ void *memset(void *dest, int value, size_t count);
  * @return Pointer to dest.
  */
 void *memcpy(void *dest, const void *src, size_t count);
+
+/**
+ * Copy bytes into a bounded destination region.
+ *
+ * @param dest Destination memory region.
+ * @param dest_size Total capacity of destination memory region.
+ * @param src Source memory region.
+ * @param count Number of bytes to copy.
+ * @return true if copied, false if arguments are invalid or count exceeds dest_size.
+ */
+bool safe_memcpy(void *dest, size_t dest_size, const void *src, size_t count);
 
 /**
  * Compare two memory regions byte-by-byte.

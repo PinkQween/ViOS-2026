@@ -12,9 +12,66 @@
 
 static ISR80H_COMMAND isr80h_commands[MAX_ISR80H_COMMANDS];
 static INTERRUPT_CALLBACK interrupt_callbacks[TOTAL_INTERRUPTS];
+static uint8_t pic_master_mask = 0xFF;
+static uint8_t pic_slave_mask = 0xFF;
 
 struct idt_desc idt_descriptors[TOTAL_INTERRUPTS];
 struct idtr_desc idtr_descriptor;
+
+static void idt_io_wait(void)
+{
+    outb(0x80, 0);
+}
+
+static void idt_apply_pic_masks(void)
+{
+    outb(0x21, pic_master_mask);
+    outb(0xA1, pic_slave_mask);
+}
+
+static void idt_remap_pic(void)
+{
+    pic_master_mask = 0xFF;
+    pic_slave_mask = 0xFF;
+
+    outb(0x21, pic_master_mask);
+    outb(0xA1, pic_slave_mask);
+
+    outb(0x20, 0x11);
+    idt_io_wait();
+    outb(0xA0, 0x11);
+    idt_io_wait();
+    outb(0x21, 0x20);
+    idt_io_wait();
+    outb(0xA1, 0x28);
+    idt_io_wait();
+    outb(0x21, 0x04);
+    idt_io_wait();
+    outb(0xA1, 0x02);
+    idt_io_wait();
+    outb(0x21, 0x01);
+    idt_io_wait();
+    outb(0xA1, 0x01);
+    idt_io_wait();
+
+    idt_apply_pic_masks();
+}
+
+void idt_unmask_irq(uint8_t irq)
+{
+    if (irq >= 16) {
+        return;
+    }
+
+    if (irq < 8) {
+        pic_master_mask &= (uint8_t)~(1 << irq);
+    } else {
+        pic_master_mask &= (uint8_t)~(1 << 2);
+        pic_slave_mask &= (uint8_t)~(1 << (irq - 8));
+    }
+
+    idt_apply_pic_masks();
+}
 
 static void idt_end_of_interrupt(int interrupt)
 {
@@ -62,8 +119,44 @@ static const char* idt_exception_name(int interrupt)
     return "Reserved Exception";
 }
 
+static uint32_t idt_page_fault_address(void)
+{
+    uint32_t address;
+    __asm__ __volatile__("mov %%cr2, %0" : "=r"(address));
+    return address;
+}
+
 void idt_handle_error(int interrupt, struct interrupt_frame* frame)
 {
+    char message[192];
+
+    if (interrupt == 8 || !task_current() || !task_current()->process) {
+        if (interrupt == 14) {
+            snprintf(
+                message,
+                sizeof(message),
+                "%s at 0x%x eip=0x%x\n",
+                idt_exception_name(interrupt),
+                idt_page_fault_address(),
+                frame ? frame->ip : 0
+            );
+        } else {
+            snprintf(
+                message,
+                sizeof(message),
+                "%s eip=0x%x\n",
+                idt_exception_name(interrupt),
+                frame ? frame->ip : 0
+            );
+        }
+
+        panic(message);
+    }
+
+    print_w_color("Terminating process after exception: ", choose_colour(LIGHT_RED, BLACK));
+    print_w_color(idt_exception_name(interrupt), choose_colour(LIGHT_RED, BLACK));
+    print("\n");
+
     process_terminate(task_current()->process);
     task_next();
 }
@@ -132,6 +225,7 @@ void idt_init()
     }
 
     idt_set(0x80, (uint32_t)isr80h, 0xEE);
+    idt_remap_pic();
 
     status_t res = idt_register_interrupt_callback(0x20, idt_clock);
     if (status_is_error(res)) {

@@ -128,6 +128,10 @@ void kernel_main()
     boot_step("Initializing keyboard...");
     panic_if_error("Failed to initialize keyboard", keyboard_init());
 
+    boot_step("Enabling hardware IRQs...");
+    idt_unmask_irq(0);
+    idt_unmask_irq(1);
+
     boot_step("Setting up TSS...");
     kernel_setup_tss();
 
@@ -141,8 +145,5 @@ void kernel_main()
     kernel_load_init_process();
     task_run_root_task();
 
-    for (;;)
-    {
-        __asm__ __volatile__("hlt");
-    }
+    kernel_idle();
 }
