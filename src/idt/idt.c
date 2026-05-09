@@ -126,36 +126,50 @@ static uint32_t idt_page_fault_address(void)
     return address;
 }
 
+static void idt_format_exception_message(char* message, size_t size, int interrupt, struct interrupt_frame* frame)
+{
+    if (interrupt == 14) {
+        snprintf(
+            message,
+            size,
+            "%s cr2=0x%x err=0x%x eip=0x%x eax=0x%x ebx=0x%x ecx=0x%x edx=0x%x\n",
+            idt_exception_name(interrupt),
+            idt_page_fault_address(),
+            frame ? frame->error_code : 0,
+            frame ? frame->ip : 0,
+            frame ? frame->eax : 0,
+            frame ? frame->ebx : 0,
+            frame ? frame->ecx : 0,
+            frame ? frame->edx : 0
+        );
+        return;
+    }
+
+    snprintf(
+        message,
+        size,
+        "%s err=0x%x eip=0x%x eax=0x%x ebx=0x%x ecx=0x%x edx=0x%x\n",
+        idt_exception_name(interrupt),
+        frame ? frame->error_code : 0,
+        frame ? frame->ip : 0,
+        frame ? frame->eax : 0,
+        frame ? frame->ebx : 0,
+        frame ? frame->ecx : 0,
+        frame ? frame->edx : 0
+    );
+}
+
 void idt_handle_error(int interrupt, struct interrupt_frame* frame)
 {
-    char message[192];
+    char message[256];
+    idt_format_exception_message(message, sizeof(message), interrupt, frame);
 
     if (interrupt == 8 || !task_current() || !task_current()->process) {
-        if (interrupt == 14) {
-            snprintf(
-                message,
-                sizeof(message),
-                "%s at 0x%x eip=0x%x\n",
-                idt_exception_name(interrupt),
-                idt_page_fault_address(),
-                frame ? frame->ip : 0
-            );
-        } else {
-            snprintf(
-                message,
-                sizeof(message),
-                "%s eip=0x%x\n",
-                idt_exception_name(interrupt),
-                frame ? frame->ip : 0
-            );
-        }
-
         panic(message);
     }
 
     print_w_color("Terminating process after exception: ", choose_colour(LIGHT_RED, BLACK));
-    print_w_color(idt_exception_name(interrupt), choose_colour(LIGHT_RED, BLACK));
-    print("\n");
+    print_w_color(message, choose_colour(LIGHT_RED, BLACK));
 
     process_terminate(task_current()->process);
     task_next();
@@ -164,7 +178,7 @@ void idt_handle_error(int interrupt, struct interrupt_frame* frame)
 static void idt_clock(struct interrupt_frame* frame)
 {
     (void)frame;
-    outb(0x20, 0x20);
+    idt_end_of_interrupt(0x20);
     task_next();
 }
 

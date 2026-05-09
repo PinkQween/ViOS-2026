@@ -25,6 +25,7 @@ struct idtr_desc {
 
 struct interrupt_frame {
     uint32_t edi, esi, ebp, reserved, ebx, edx, ecx, eax;
+    uint32_t error_code;
     uint32_t ip, cs, flags, esp, ss;
 } __attribute__((packed));
 

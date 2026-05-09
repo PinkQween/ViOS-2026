@@ -17,6 +17,7 @@ idt_load:
     ret
 
 isr80h:
+    push dword 0
     pushad
     
     push esp
@@ -26,10 +27,27 @@ isr80h:
     add esp, 8
 
     popad
+    add esp, 4
     mov eax, [tmp_res]
     iret
 
-%macro interrupt 1
+%macro interrupt_no_error 1
+    global int%1
+    int%1:
+        push dword 0
+        pushad
+
+        push esp
+        push dword %1
+        call interrupt_handler
+        add esp, 8
+
+        popad
+        add esp, 4
+        iret
+%endmacro
+
+%macro interrupt_error 1
     global int%1
     int%1:
         pushad
@@ -40,15 +58,17 @@ isr80h:
         add esp, 8
 
         popad
-%if %1 = 8 || (%1 >= 10 && %1 <= 14) || %1 = 17 || %1 = 21
         add esp, 4
-%endif
         iret
 %endmacro
 
 %assign i 0
 %rep 256
-    interrupt i
+%if i = 8 || (i >= 10 && i <= 14) || i = 17 || i = 21
+    interrupt_error i
+%else
+    interrupt_no_error i
+%endif
 %assign i i+1
 %endrep
 
