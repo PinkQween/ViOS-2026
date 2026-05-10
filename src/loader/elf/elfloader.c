@@ -363,10 +363,10 @@ static status_t elf_apply_rel(struct elf_file* file, void* rel_ptr, size_t size)
         }
 
         switch (type) {
-            case 1: *patch_addr = (uint32_t)sym_addr; break; // R_386_32
-            case 2: *patch_addr = (uint32_t)sym_addr - rel[i].r_offset; break; // R_386_PC32
-            case 6: *patch_addr = (uint32_t)sym_addr; break; // R_386_GLOB_DAT
-            case 7: *patch_addr = (uint32_t)sym_addr; break; // R_386_JMP_SLOT
+            case 1: *patch_addr = (uint32_t)(uintptr_t)sym_addr; break; // R_386_32
+            case 2: *patch_addr = (uint32_t)((uintptr_t)sym_addr - rel[i].r_offset); break; // R_386_PC32
+            case 6: *patch_addr = (uint32_t)(uintptr_t)sym_addr; break; // R_386_GLOB_DAT
+            case 7: *patch_addr = (uint32_t)(uintptr_t)sym_addr; break; // R_386_JMP_SLOT
             case 8: { // R_386_RELATIVE
                 // Add load offset: where we're loaded minus where we expect to be
                 uintptr_t load_offset = (uintptr_t)file->segments[0].paddr - (uintptr_t)file->segments[0].vaddr;
@@ -400,8 +400,8 @@ static status_t elf_apply_rela(struct elf_file* file, void* rela_ptr, size_t siz
         }
 
         switch (type) {
-            case 1: *patch_addr = (uint32_t)sym_addr + rela[i].r_addend; break; // R_386_32
-            case 2: *patch_addr = (uint32_t)sym_addr + rela[i].r_addend - rela[i].r_offset; break; // R_386_PC32
+            case 1: *patch_addr = (uint32_t)((uintptr_t)sym_addr + rela[i].r_addend); break; // R_386_32
+            case 2: *patch_addr = (uint32_t)((uintptr_t)sym_addr + rela[i].r_addend - rela[i].r_offset); break; // R_386_PC32
             case 8: { // R_386_RELATIVE
                 uintptr_t load_offset = (uintptr_t)file->segments[0].paddr - (uintptr_t)file->segments[0].vaddr;
                 *patch_addr = load_offset + rela[i].r_addend;

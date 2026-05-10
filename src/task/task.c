@@ -46,7 +46,7 @@ static void task_list_remove(struct task* task)
 
 void task_free(struct task* task)
 {
-    paging_free_4gb(task->page_directory);
+    paging_desc_free(task->page_directory);
     task_list_remove(task);
     kfree(task);
 }
@@ -56,17 +56,18 @@ status_t task_init(struct task* task, struct process* process)
 {
     memset(task, 0, sizeof(struct task));
 
-    task->page_directory = paging_new_4gb(PAGING_IS_WRITEABLE | PAGING_ACCESSIBLE_FROM_ALL);
-
+    task->page_directory = paging_desc_new(PAGING_MAP_LEVEL_4);
     if (!task->page_directory) {
         return STATUS_ERR(ENOMEM);
     }
+
+    paging_map_e820_memory_regions(task->page_directory);
     
-    task->registers.ip = PROGRAM_VIRTUAL_ADDRESS;
+    task->registers.rip = PROGRAM_VIRTUAL_ADDRESS;
     task->registers.ss = USER_DATA_SEGMENT;
     task->registers.cs = USER_CODE_SEGMENT;
-    task->registers.flags = 0x202;
-    task->registers.esp = PROGRAM_VIRTUAL_STACK_ADDRESS_START;
+    task->registers.rflags = 0x202;
+    task->registers.rsp = PROGRAM_VIRTUAL_STACK_ADDRESS_START;
 
     task->process = process;
 
@@ -97,7 +98,7 @@ struct task* task_new(struct process* process)
     status_t res = task_init(task, process);
 
     if (status_is_error(res)) {
-        paging_free_4gb(task->page_directory);
+        paging_desc_free(task->page_directory);
         kfree(task);
         return 0;
     }
@@ -142,18 +143,18 @@ void task_run_root_task()
 
 void task_save_state(struct task* task, struct interrupt_frame* frame)
 {
-    task->registers.ip = frame->ip;
+    task->registers.rip = frame->rip;
     task->registers.cs = frame->cs;
-    task->registers.flags = frame->flags;
-    task->registers.esp = frame->esp;
+    task->registers.rflags = frame->rflags;
+    task->registers.rsp = frame->user_rsp;
     task->registers.ss = frame->ss;
-    task->registers.eax = frame->eax;
-    task->registers.ecx = frame->ecx;
-    task->registers.edx = frame->edx;
-    task->registers.ebx = frame->ebx;
-    task->registers.ebp = frame->ebp;
-    task->registers.esi = frame->esi;
-    task->registers.edi = frame->edi;
+    task->registers.rax = frame->rax;
+    task->registers.rcx = frame->rcx;
+    task->registers.rdx = frame->rdx;
+    task->registers.rbx = frame->rbx;
+    task->registers.rbp = frame->rbp;
+    task->registers.rsi = frame->rsi;
+    task->registers.rdi = frame->rdi;
 }
 
 void task_current_save_state(struct interrupt_frame* frame)
@@ -178,9 +179,6 @@ status_t copy_string_from_task(struct task* task, void* dest, const char* src, i
         return STATUS_ERR(ENOMEM);
     }
 
-    uint32_t* task_directory = task->page_directory->directory_entry;
-    uint32_t old_entry = paging_get(task_directory, tmp);
-
     status_t res = paging_map(task->page_directory, tmp, tmp, PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESSIBLE_FROM_ALL);
     if (status_is_error(res)) {
         kfree(tmp);
@@ -192,13 +190,6 @@ status_t copy_string_from_task(struct task* task, void* dest, const char* src, i
     strncpy(tmp, src, max_len);
 
     kernel_page();
-
-    res = paging_set(task->page_directory, tmp, old_entry);
-
-    if (status_is_error(res)) {
-        kfree(tmp);
-        return res;
-    }
 
     strncpy(dest, tmp, max_len);
 
@@ -216,11 +207,11 @@ void task_page_task(struct task* task)
 
 void* task_get_stack_item(struct task* task, int index)
 {
-    uint32_t* esp = (uint32_t*)task->registers.esp;
+    uint64_t* rsp = (uint64_t*)task->registers.rsp;
     void* item = 0;
     
     task_page_task(task);
-    item = (void*)esp[index];
+    item = (void*)rsp[index];
 
     kernel_page();
 
@@ -233,7 +224,7 @@ void* task_virtual_to_physical(struct task* task, void* virtual_address)
         return NULL;
     }
     
-    return paging_get_physical_address(task->page_directory->directory_entry, virtual_address);
+    return paging_get_physical_address(task->page_directory, virtual_address);
 }
 
 void task_next()

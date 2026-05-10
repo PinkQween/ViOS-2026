@@ -3,50 +3,60 @@
 
 #include "stdint.h"
 
-/** Global Descriptor Table entry structure. */
+/**
+ * @file gdt.h
+ * @brief Global Descriptor Table (GDT) definitions and functions.
+ *
+ * This header defines the structures and functions for managing the
+ * Global Descriptor Table (GDT) in an x86_64 operating system kernel.
+ *
+ * The GDT is a critical data structure used by the CPU to define the
+ * characteristics of memory segments, including their base address,
+ * limit, access rights, and other attributes. It is essential for
+ * setting up protected mode and long mode operation.
+ *
+ * This implementation provides basic support for:
+ * - Code and data segments
+ * - Task State Segment (TSS) descriptors
+ *
+ * Note: This GDT implementation is simplified and may not cover all
+ * possible segment types or features. It is intended for educational
+ * purposes and may need to be extended for a full-featured kernel.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 struct gdt_entry
 {
-    /* Segment limit (bits 0-15). */
     uint16_t limit_low;
-    /* Base address (bits 0-15). */
     uint16_t base_low;
-    /* Base address (bits 16-23). */
     uint8_t base_middle;
-    /* Access flags. */
     uint8_t access;
-    /* Granularity and segment limit (bits 16-19). */
-    uint8_t granularity;
-    /* Base address (bits 24-31). */
+    uint8_t limit_high_flags;
     uint8_t base_high;
 } __attribute__((packed));
 
-struct gdt_structured
+struct tss_desc_64
 {
-    /* Base address of the GDT. */
-    uint32_t base;
-    /* Limit of the GDT (size - 1). */
-    uint32_t limit;
-    /* Type of GDT entry (e.g. code/data). */
-    uint8_t type;
+    uint16_t limit_low;
+    uint16_t base_low;
+    uint8_t base_middle0;
+    uint8_t access;
+    uint8_t limit_high_flags;
+    uint8_t base_middle1;
+    uint32_t base_high;
+    uint32_t reserved;
 } __attribute__((packed));
 
-/**
- * Loads the GDT into the processor's descriptor table register.
- *
- * @param gdt GDT entry array and metadata to load.
- * @param size Total size of the GDT in bytes.
- * @return None.
- */
-void gdt_load(struct gdt_entry* gdt, uint16_t size);
+struct gdt_ptr
+{
+    uint16_t limit;
+    uint64_t base;
+} __attribute__((packed));
 
-/**
- * Convert a structured GDT representation into raw GDT entries.
- *
- * @param gdt Output GDT entry array to populate.
- * @param structured Input structured GDT metadata and type.
- * @param entry_count Number of entries to generate in the output GDT.
- * @return None.
- */
-void gdt_structured_to_gdt(struct gdt_entry* gdt, struct gdt_structured* structured, int entry_count);
+void gdt_set(struct gdt_entry* gdt_entry, void* address, uint32_t limit, uint8_t access_byte, uint8_t flags);
+void gdt_set_tss(struct tss_desc_64* desc, void* tss_addr, uint32_t limit, uint8_t access_byte, uint8_t flags);
+void gdt_load(struct gdt_ptr* gdt);
 
 #endif /* GDT_H */

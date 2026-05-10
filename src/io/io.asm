@@ -1,221 +1,117 @@
-section .asm
+; io.asm - x86_64 I/O routines
+; ---------------------------------------------------------
+; Implements port I/O functions for 64-bit OS kernel
+; ---------------------------------------------------------
+
+[BITS 64]
 
 ; =========================================================
 ; STRING INPUT (port -> memory)
+; C functions: insb, insw, insd
 ; =========================================================
 
 global insb
 insb:
-    push ebp
-    mov ebp, esp
-    push edi
-    push ecx
-    push edx
-
-    mov dx,  [ebp + 8]     ; port
-    mov edi, [ebp + 12]    ; buffer
-    mov ecx, [ebp + 16]    ; count
-
+    ; C args: rdi=port, rsi=buffer, rdx=count
+    mov dx, di      ; port -> dx
+    mov rdi, rsi    ; buffer -> rdi
+    mov rcx, rdx    ; count -> rcx
     cld
     rep insb
-
-    pop edx
-    pop ecx
-    pop edi
-    pop ebp
     ret
-
 
 global insw
 insw:
-    push ebp
-    mov ebp, esp
-    push edi
-    push ecx
-    push edx
-
-    mov dx,  [ebp + 8]
-    mov edi, [ebp + 12]
-    mov ecx, [ebp + 16]
-
+    mov dx, di
+    mov rdi, rsi
+    mov rcx, rdx
     cld
     rep insw
-
-    pop edx
-    pop ecx
-    pop edi
-    pop ebp
     ret
-
 
 global insd
 insd:
-    push ebp
-    mov ebp, esp
-    push edi
-    push ecx
-    push edx
-
-    mov dx,  [ebp + 8]
-    mov edi, [ebp + 12]
-    mov ecx, [ebp + 16]
-
+    mov dx, di
+    mov rdi, rsi
+    mov rcx, rdx
     cld
     rep insd
-
-    pop edx
-    pop ecx
-    pop edi
-    pop ebp
     ret
-
 
 ; =========================================================
 ; STRING OUTPUT (memory -> port)
+; C functions: outsb, outsw, outsd
 ; =========================================================
 
 global outsb
 outsb:
-    push ebp
-    mov ebp, esp
-    push esi
-    push ecx
-    push edx
-
-    mov dx,  [ebp + 8]
-    mov esi, [ebp + 12]
-    mov ecx, [ebp + 16]
-
+    mov dx, di      ; port
+    mov rsi, rsi    ; buffer already in rsi
+    mov rcx, rdx    ; count
     cld
     rep outsb
-
-    pop edx
-    pop ecx
-    pop esi
-    pop ebp
     ret
-
 
 global outsw
 outsw:
-    push ebp
-    mov ebp, esp
-    push esi
-    push ecx
-    push edx
-
-    mov dx,  [ebp + 8]
-    mov esi, [ebp + 12]
-    mov ecx, [ebp + 16]
-
+    mov dx, di
+    mov rsi, rsi
+    mov rcx, rdx
     cld
     rep outsw
-
-    pop edx
-    pop ecx
-    pop esi
-    pop ebp
     ret
-
 
 global outsd
 outsd:
-    push ebp
-    mov ebp, esp
-    push esi
-    push ecx
-    push edx
-
-    mov dx,  [ebp + 8]
-    mov esi, [ebp + 12]
-    mov ecx, [ebp + 16]
-
+    mov dx, di
+    mov rsi, rsi
+    mov rcx, rdx
     cld
     rep outsd
-
-    pop edx
-    pop ecx
-    pop esi
-    pop ebp
     ret
-
 
 ; =========================================================
 ; SINGLE PORT I/O
+; C functions: inb, inw, ind, outb, outw, outd
 ; =========================================================
 
 global inb
 inb:
-    push ebp
-    mov ebp, esp
-
-    mov dx, [ebp + 8]
+    mov dx, di      ; port
     in al, dx
     movzx eax, al
-
-    pop ebp
     ret
-
 
 global inw
 inw:
-    push ebp
-    mov ebp, esp
-
-    mov dx, [ebp + 8]
+    mov dx, di
     in ax, dx
     movzx eax, ax
-
-    pop ebp
     ret
-
 
 global ind
 ind:
-    push ebp
-    mov ebp, esp
-
-    mov dx, [ebp + 8]
+    mov dx, di
     in eax, dx
-
-    pop ebp
     ret
-
 
 global outb
 outb:
-    push ebp
-    mov ebp, esp
-
-    mov dx, [ebp + 8]
-    mov al, [ebp + 12]
+    mov dx, di      ; port
+    mov al, sil     ; value in C: uint8_t = lower 8 bits of rsi (second arg)
     out dx, al
-
-    pop ebp
     ret
-
 
 global outw
 outw:
-    push ebp
-    mov ebp, esp
-
-    mov dx, [ebp + 8]
-    mov ax, [ebp + 12]
+    mov dx, di
+    mov ax, si      ; value in C: uint16_t = lower 16 bits of rsi
     out dx, ax
-
-    pop ebp
     ret
-
 
 global outd
 outd:
-    push ebp
-    mov ebp, esp
-
-    mov dx, [ebp + 8]
-    mov eax, [ebp + 12]
+    mov dx, di
+    mov eax, esi    ; value in C: uint32_t = lower 32 bits of rsi
     out dx, eax
-
-    pop ebp
     ret

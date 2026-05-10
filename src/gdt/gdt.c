@@ -1,37 +1,59 @@
 #include "gdt/gdt.h"
-#include "console/console.h"
+#include "memory/memory.h"
 
-void encode_gdt_entry(uint8_t* entry, struct gdt_structured source)
+/* =========================================================
+ * STANDARD GDT ENTRY
+ * ========================================================= */
+
+void gdt_set(
+    struct gdt_entry* entry,
+    void* address,
+    uint32_t limit,
+    uint8_t access,
+    uint8_t flags
+)
 {
-    /* S bit (bit 4 of access byte): 1 = code/data, 0 = system (e.g., TSS). */
-    int is_code_or_data_segment = (source.type & 0x10) != 0;
+    memset(entry, 0, sizeof(struct gdt_entry));
 
-    if ((source.limit > 0x100000) && (source.limit & 0xFFF) != 0xFFF) {
-        panic("GDT entry limit must be either below 1MB or a multiple of 4KB minus 1");
-    }
+    entry->limit_low = limit & 0xFFFF;
 
-    if (source.limit > 0x100000) {
-        source.limit = source.limit >> 12;
-        entry[6] = is_code_or_data_segment ? 0xC0 : 0x80;
-    } else {
-        entry[6] = is_code_or_data_segment ? 0x40 : 0x00;
-    }
+    entry->base_low = (uintptr_t)address & 0xFFFF;
+    entry->base_middle = ((uintptr_t)address >> 16) & 0xFF;
+    entry->base_high = ((uintptr_t)address >> 24) & 0xFF;
 
-    entry[0] = source.limit & 0xFF;
-    entry[1] = (source.limit >> 8) & 0xFF;
-    entry[6] |= (source.limit >> 16) & 0x0F;
+    entry->access = access;
 
-    entry[2] = source.base & 0xFF;
-    entry[3] = (source.base >> 8) & 0xFF;
-    entry[4] = (source.base >> 16) & 0xFF;
-    entry[7] = (source.base >> 24) & 0xFF;
-
-    entry[5] = source.type;
+    entry->limit_high_flags =
+        ((limit >> 16) & 0x0F) |
+        (flags & 0xF0);
 }
 
-void gdt_structured_to_gdt(struct gdt_entry* gdt, struct gdt_structured* structured, int entry_count)
+/* =========================================================
+ * 64-BIT TSS DESCRIPTOR
+ * ========================================================= */
+
+void gdt_set_tss(
+    struct tss_desc_64* desc,
+    void* tss_addr,
+    uint32_t limit,
+    uint8_t access,
+    uint8_t flags
+)
 {
-    for (int i = 0; i < entry_count; i++) {
-        encode_gdt_entry((uint8_t*)&gdt[i], structured[i]);
-    }
+    memset(desc, 0, sizeof(struct tss_desc_64));
+
+    uint64_t base = (uint64_t)tss_addr;
+
+    desc->limit_low = limit & 0xFFFF;
+
+    desc->base_low = base & 0xFFFF;
+    desc->base_middle0 = (base >> 16) & 0xFF;
+    desc->base_middle1 = (base >> 24) & 0xFF;
+    desc->base_high = (base >> 32) & 0xFFFFFFFF;
+
+    desc->access = access;
+
+    desc->limit_high_flags =
+        ((limit >> 16) & 0x0F) |
+        (flags & 0xF0);
 }

@@ -1,4 +1,75 @@
 #include "memory/memory.h"
+#include "config.h"
+
+size_t e820_total_entries()
+{
+    return *((uint16_t*)MEMORY_MAP_TOTAL_ENTRIES_LOCATION);
+}
+
+struct e820_entry* e820_get_entry(size_t index)
+{
+    if (index >= e820_total_entries())
+    {
+        return NULL;
+    }
+
+    return (struct e820_entry*)(MEMORY_MAP_LOCATION + (index * sizeof(struct e820_entry)));
+}
+
+struct e820_entry* e820_largest_free_entry(struct e820_entry* entries, size_t total_entries)
+{
+    if (!entries || total_entries == 0)
+    {
+        total_entries = e820_total_entries();
+        entries = (struct e820_entry*)MEMORY_MAP_LOCATION;
+    }
+
+    struct e820_entry* chosen_entry = NULL;
+
+    for (size_t i = 0; i < total_entries; i++)
+    {
+        struct e820_entry* entry = &entries[i];
+
+        if (entry->type == 1)
+        {
+            if (!chosen_entry)
+            {
+                chosen_entry = entry;
+                continue;
+            }
+
+            if (entry->length > chosen_entry->length)
+            {
+                chosen_entry = entry;
+            }
+        }
+    }
+
+    return chosen_entry;
+}
+
+size_t e820_total_accessible_memory(struct e820_entry* entries, size_t total_entries)
+{
+    if (!entries || total_entries == 0)
+    {
+        total_entries = e820_total_entries();
+        entries = (struct e820_entry*)MEMORY_MAP_LOCATION;
+    }
+
+    size_t total_accessible_memory = 0;
+
+    for (size_t i = 0; i < total_entries; i++)
+    {
+        struct e820_entry* entry = &entries[i];
+
+        if (entry->type == 1)
+        {
+            total_accessible_memory += entry->length;
+        }
+    }
+
+    return total_accessible_memory;
+}
 
 void *memset(void *ptr, int c, size_t size)
 {

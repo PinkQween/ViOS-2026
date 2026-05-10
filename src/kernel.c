@@ -16,22 +16,25 @@
 
 #include "stdint.h"
 
-struct paging_4gb_chunk *kernel_chunk = 0;
+struct paging_desc *kernel_paging_desc = 0;
 struct tss tss;
 
-struct gdt_entry gdt_real[TOTAL_GDT_SEGMENTS];
-struct gdt_structured gdt_structured_real[TOTAL_GDT_SEGMENTS] = {
-    { 0x00000000, 0x00000000, 0x00 },
-    { 0x00000000, 0xFFFFFFFF, 0x9A },
-    { 0x00000000, 0xFFFFFFFF, 0x92 },
-    { 0x00000000, 0xFFFFFFFF, 0xFA },
-    { 0x00000000, 0xFFFFFFFF, 0xF2 },
-    { (uint32_t)&tss, sizeof(struct tss) - 1, 0xE9 }
-};
+struct gdt_table
+{
+    struct gdt_entry null;
+    struct gdt_entry kernel_code;
+    struct gdt_entry kernel_data;
+    struct gdt_entry user_code;
+    struct gdt_entry user_data;
+    struct tss_desc_64 tss;
+} __attribute__((packed));
+
+static struct gdt_table gdt_real;
+
 void kernel_page()
 {
     kernel_registers();
-    paging_switch(kernel_chunk);
+    paging_switch(kernel_paging_desc);
 }
 
 static void print_status_w_colour(const char* message, char colour)
@@ -69,16 +72,26 @@ static void kernel_print_banner()
 
 static void kernel_setup_gdt()
 {
-    memset(gdt_real, 0, sizeof(gdt_real));
-    gdt_structured_to_gdt(gdt_real, gdt_structured_real, TOTAL_GDT_SEGMENTS);
-    gdt_load(gdt_real, sizeof(gdt_real));
+    memset(&gdt_real, 0, sizeof(gdt_real));
+    gdt_set(&gdt_real.kernel_code, 0, 0, 0x9A, 0x20);
+    gdt_set(&gdt_real.kernel_data, 0, 0, 0x92, 0x00);
+    gdt_set(&gdt_real.user_code, 0, 0xFFFFF, 0xFA, 0xC0);
+    gdt_set(&gdt_real.user_data, 0, 0xFFFFF, 0xF2, 0xC0);
+    gdt_set_tss(&gdt_real.tss, &tss, sizeof(struct tss) - 1, 0x89, 0x00);
+
+    struct gdt_ptr gdt_descriptor = {
+        .limit = sizeof(gdt_real) - 1,
+        .base = (uint64_t)&gdt_real
+    };
+
+    gdt_load(&gdt_descriptor);
+    kernel_registers();
 }
 
 static void kernel_setup_tss()
 {
     memset(&tss, 0, sizeof(struct tss));
-    tss.esp0 = 0x60000;
-    tss.ss0 = KERNEL_DATA_SELECTOR;
+    tss.rsp0 = 0x60000;
     tss.iomap_base = sizeof(struct tss);
 
     tss_load(0x28);
@@ -86,13 +99,14 @@ static void kernel_setup_tss()
 
 static void kernel_setup_paging()
 {
-    kernel_chunk = paging_new_4gb(PAGING_IS_WRITEABLE | PAGING_ACCESSIBLE_FROM_ALL | PAGING_IS_PRESENT);
-    if (!kernel_chunk)
+    kernel_paging_desc = paging_desc_new(PAGING_MAP_LEVEL_4);
+    if (!kernel_paging_desc)
     {
-        panic_status("Failed to create kernel paging chunk", STATUS_ERR(ENOMEM));
+        panic_status("Failed to create kernel paging descriptor", STATUS_ERR(ENOMEM));
     }
 
-    paging_switch(kernel_chunk);
+    paging_map_e820_memory_regions(kernel_paging_desc);
+    paging_switch(kernel_paging_desc);
 }
 
 static void kernel_load_init_process()
@@ -112,6 +126,9 @@ void kernel_main()
 
     boot_step("Initializing memory management...");
     kheap_init();
+
+    boot_step("Setting up paging...");
+    kernel_setup_paging();
 
     boot_step("Initializing filesystem...");
     fs_init();
@@ -134,12 +151,6 @@ void kernel_main()
 
     boot_step("Setting up TSS...");
     kernel_setup_tss();
-
-    boot_step("Setting up paging...");
-    kernel_setup_paging();
-
-    boot_step("Enabling paging...");
-    enable_paging();
 
     print_ok();
     kernel_load_init_process();

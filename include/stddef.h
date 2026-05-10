@@ -3,7 +3,7 @@
 
 #define NULL ((void*)0)
 
-typedef unsigned int size_t;
-typedef signed int ptrdiff_t;
+typedef unsigned long long size_t;
+typedef signed long long ptrdiff_t;
 
 #endif /* STDDEF_H */

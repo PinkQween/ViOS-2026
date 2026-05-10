@@ -5,6 +5,8 @@
 ;--------------------------------------
 %define CODE_SEG 0x08
 %define DATA_SEG 0x10
+%define MEMORY_MAP_LOCATION 0x7E00
+%define MEMORY_MAP_TOTAL_ENTRIES_LOCATION 0x7DFE
 %ifndef KERNEL_LBA_START
 %define KERNEL_LBA_START 400
 %endif
@@ -51,7 +53,14 @@ start:
     mov ds, ax
     mov es, ax
     mov ss, ax
+
+    in al, 0x92
+    or al, 2
+    out 0x92, al
+
     mov sp, 0x7C00
+    call load_memory_map    
+
     sti
 
 ;-----------------------------
@@ -91,6 +100,34 @@ gdt_descriptor:
     dw gdt_end - gdt_start - 1
     dd gdt_start
 
+;-----------------------------
+; Load memory map using BIOS interrupt 0x15, function 0xE820
+;-----------------------------
+load_memory_map:
+    mov word [MEMORY_MAP_TOTAL_ENTRIES_LOCATION], 0
+    mov di, MEMORY_MAP_LOCATION
+    mov cx, 24
+    xor bx, bx
+
+.get_e820:
+    mov eax, 0xE820
+    mov edx, 0x534D4150
+    mov ecx, 24
+    int 0x15
+    jc .done
+    cmp eax, 0x534D4150
+    jne .done
+    
+    inc word [MEMORY_MAP_TOTAL_ENTRIES_LOCATION]
+
+    add di, 24
+
+    test bx, bx
+    jnz .get_e820
+
+.done:
+    ret
+    
 ;-----------------------------
 ; 32-bit loader entry point
 ;-----------------------------

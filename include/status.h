@@ -12,7 +12,7 @@
  * - <0 : error values encoded as -errno
  */
 
-typedef int32_t status_t;
+typedef int64_t status_t;
 
 /* =========================
  * Standard error codes

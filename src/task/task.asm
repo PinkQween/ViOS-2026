@@ -1,3 +1,5 @@
+[BITS 64]
+
 section .asm
 
 global task_return
@@ -5,46 +7,28 @@ global restore_general_purpose_registers
 global user_registers
 
 task_return:
-    mov ebx, [esp + 4] ; struct registers*
+    push qword [rdi+88]
+    push qword [rdi+80]
+    mov rax, [rdi+72]
+    or rax, 0x200
+    push rax
 
-    ; Load user data segments before iret to ring 3.
-    mov ax, [ebx + 44]
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
+    push qword [rdi+64]
+    push qword [rdi+56]
+    call restore_general_purpose_registers
 
-    ; Build iretd frame: SS, ESP, EFLAGS, CS, EIP.
-    push dword [ebx + 44]
-    push dword [ebx + 40]
-    push dword [ebx + 36]
-    push dword [ebx + 32]
-    push dword [ebx + 28]
-
-    ; Restore GPRs from saved task state.
-    mov edi, [ebx]
-    mov esi, [ebx + 4]
-    mov ebp, [ebx + 8]
-    mov edx, [ebx + 16]
-    mov ecx, [ebx + 20]
-    mov eax, [ebx + 24]
-    mov ebx, [ebx + 12]
-
-    iretd
+    iretq
 
 restore_general_purpose_registers:
-    push ebp
-    mov ebp, esp
-    mov ebx, [ebp + 8] ; Load the pointer to the saved registers into ebx
-    mov edi, [ebx] ; Load the saved edi value
-    mov esi, [ebx + 4] ; Load the saved esi value
-    mov ebp, [ebx + 8] ; Load the saved ebp value
-    mov edx, [ebx + 16] ; Load the saved edx value
-    mov ecx, [ebx + 20] ; Load the saved ecx value
-    mov eax, [ebx + 24] ; Load the saved eax value
-    mov ebx, [ebx + 12] ; Load the saved ebx value
-    pop ebp
+    mov rsi, [rdi+8]
+    mov rbp, [rdi+16]
+    mov rbx, [rdi+24]
+    mov rdx, [rdi+32]
+    mov rcx, [rdi+40]
+    mov rax, [rdi+48]
+    mov rdi, [rdi]
     ret
+
 
 user_registers:
     mov ax, 0x23

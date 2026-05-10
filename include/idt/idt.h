@@ -13,20 +13,22 @@ typedef void  (*INTERRUPT_CALLBACK)(struct interrupt_frame*);
 struct idt_desc {
     uint16_t offset_1;
     uint16_t selector;
-    uint8_t zero;
+    uint8_t ist;
     uint8_t type_attr;
     uint16_t offset_2;
+    uint32_t offset_3;
+    uint32_t zero;
 } __attribute__((packed));
 
 struct idtr_desc {
     uint16_t limit;
-    uint32_t base;
+    uint64_t base;
 } __attribute__((packed));
 
 struct interrupt_frame {
-    uint32_t edi, esi, ebp, reserved, ebx, edx, ecx, eax;
-    uint32_t error_code;
-    uint32_t ip, cs, flags, esp, ss;
+    uint64_t rdi, rsi, rbp, rsp, rbx, rdx, rcx, rax;
+    uint64_t error_code;
+    uint64_t rip, cs, rflags, user_rsp, ss;
 } __attribute__((packed));
 
 void idt_init(void);

@@ -119,44 +119,72 @@ static const char* idt_exception_name(int interrupt)
     return "Reserved Exception";
 }
 
-static uint32_t idt_page_fault_address(void)
+static uintptr_t idt_page_fault_address(void)
 {
-    uint32_t address;
+    uintptr_t address;
     __asm__ __volatile__("mov %%cr2, %0" : "=r"(address));
     return address;
 }
 
+static void idt_append_char(char* message, size_t size, size_t* written, char c)
+{
+    if (*written + 1 < size) {
+        message[*written] = c;
+    }
+    (*written)++;
+}
+
+static void idt_append_string(char* message, size_t size, size_t* written, const char* value)
+{
+    while (*value) {
+        idt_append_char(message, size, written, *value++);
+    }
+}
+
+static void idt_append_hex64(char* message, size_t size, size_t* written, uint64_t value)
+{
+    static const char digits[] = "0123456789abcdef";
+
+    idt_append_string(message, size, written, "0x");
+    for (int shift = 60; shift >= 0; shift -= 4) {
+        idt_append_char(message, size, written, digits[(value >> shift) & 0xF]);
+    }
+}
+
+static void idt_append_register(char* message, size_t size, size_t* written, const char* name, uint64_t value)
+{
+    idt_append_char(message, size, written, ' ');
+    idt_append_string(message, size, written, name);
+    idt_append_char(message, size, written, '=');
+    idt_append_hex64(message, size, written, value);
+}
+
 static void idt_format_exception_message(char* message, size_t size, int interrupt, struct interrupt_frame* frame)
 {
-    if (interrupt == 14) {
-        snprintf(
-            message,
-            size,
-            "%s cr2=0x%x err=0x%x eip=0x%x eax=0x%x ebx=0x%x ecx=0x%x edx=0x%x\n",
-            idt_exception_name(interrupt),
-            idt_page_fault_address(),
-            frame ? frame->error_code : 0,
-            frame ? frame->ip : 0,
-            frame ? frame->eax : 0,
-            frame ? frame->ebx : 0,
-            frame ? frame->ecx : 0,
-            frame ? frame->edx : 0
-        );
+    size_t written = 0;
+
+    if (size == 0) {
         return;
     }
 
-    snprintf(
-        message,
-        size,
-        "%s err=0x%x eip=0x%x eax=0x%x ebx=0x%x ecx=0x%x edx=0x%x\n",
-        idt_exception_name(interrupt),
-        frame ? frame->error_code : 0,
-        frame ? frame->ip : 0,
-        frame ? frame->eax : 0,
-        frame ? frame->ebx : 0,
-        frame ? frame->ecx : 0,
-        frame ? frame->edx : 0
-    );
+    idt_append_string(message, size, &written, idt_exception_name(interrupt));
+    if (interrupt == 14) {
+        idt_append_register(message, size, &written, "cr2", idt_page_fault_address());
+    }
+
+    idt_append_register(message, size, &written, "err", frame ? frame->error_code : 0);
+    idt_append_register(message, size, &written, "rip", frame ? frame->rip : 0);
+    idt_append_register(message, size, &written, "cs", frame ? frame->cs : 0);
+    idt_append_register(message, size, &written, "rflags", frame ? frame->rflags : 0);
+    idt_append_register(message, size, &written, "rsp", frame ? frame->user_rsp : 0);
+    idt_append_register(message, size, &written, "ss", frame ? frame->ss : 0);
+    idt_append_register(message, size, &written, "rax", frame ? frame->rax : 0);
+    idt_append_register(message, size, &written, "rbx", frame ? frame->rbx : 0);
+    idt_append_register(message, size, &written, "rcx", frame ? frame->rcx : 0);
+    idt_append_register(message, size, &written, "rdx", frame ? frame->rdx : 0);
+    idt_append_char(message, size, &written, '\n');
+
+    message[written < size ? written : size - 1] = '\0';
 }
 
 void idt_handle_error(int interrupt, struct interrupt_frame* frame)
@@ -217,28 +245,30 @@ status_t idt_register_interrupt_callback(int interrupt, INTERRUPT_CALLBACK callb
     return STATUS_OK;
 }
 
-static void idt_set(int interrupt_number, uint32_t address, uint8_t type_attr)
+static void idt_set(int interrupt_number, uintptr_t address, uint8_t type_attr)
 {
     struct idt_desc *desc = &idt_descriptors[interrupt_number];
-    desc->offset_1 = (uint32_t)address & 0xFFFF;
+    desc->offset_1 = address & 0xFFFF;
     desc->selector = KERNEL_CODE_SELECTOR;
-    desc->zero = 0;
+    desc->ist = 0;
     desc->type_attr = type_attr;
-    desc->offset_2 = (uint32_t)address >> 16;
+    desc->offset_2 = (address >> 16) & 0xFFFF;
+    desc->offset_3 = (address >> 32) & 0xFFFFFFFF;
+    desc->zero = 0;
 }
 
 void idt_init()
 {
     memset(idt_descriptors, 0, sizeof(idt_descriptors));
     idtr_descriptor.limit = sizeof(idt_descriptors) - 1;
-    idtr_descriptor.base = (uint32_t)idt_descriptors;
+    idtr_descriptor.base = (uint64_t)idt_descriptors;
     
     for (int i = 0; i < TOTAL_INTERRUPTS; i++)
     {
-        idt_set(i, (uint32_t)interrupt_pointer_table[i], 0x8E);
+        idt_set(i, (uintptr_t)interrupt_pointer_table[i], 0x8E);
     }
 
-    idt_set(0x80, (uint32_t)isr80h, 0xEE);
+    idt_set(0x80, (uintptr_t)isr80h, 0xEE);
     idt_remap_pic();
 
     status_t res = idt_register_interrupt_callback(0x20, idt_clock);

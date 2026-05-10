@@ -68,6 +68,7 @@ status_t file_new_descriptor(struct file_descriptor** descriptor_out)
         if (!file_descriptors[i])
         {
             struct file_descriptor* fd = kmalloc(sizeof(struct file_descriptor));
+
             if (!fd) {
                 return STATUS_ERR(ENOMEM);
             }
@@ -170,10 +171,10 @@ status_t fopen(const char* filepath, const char* mode)
 
     void* descriptor_internal = disk->fs->open(disk, root, file_mode);
 
-    status_t open_status = (status_t)descriptor_internal;
-    if (status_is_error(open_status)) {
+    intptr_t open_status = (intptr_t)descriptor_internal;
+    if (open_status < 0) {
         pathparser_free(root);
-        return open_status;
+        return (status_t)open_status;
     }
 
     struct file_descriptor* fd = NULL;

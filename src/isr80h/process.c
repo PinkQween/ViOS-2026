@@ -12,20 +12,20 @@ void* isr80h_command5_process_load_start(struct interrupt_frame* frame)
     status_t res = copy_string_from_task(task_current(), filename, filename_usr_ptr, sizeof(filename));
     
     if (status_is_error(res)) {
-        return (void*)res;
+        return (void*)(intptr_t)res;
     }
 
     char path[MAX_PATH];
     if (!safe_strcpy(path, sizeof(path), "0:/") ||
         !safe_strcat(path, sizeof(path), filename)) {
-        return (void*)STATUS_ERR(ENAMETOOLONG);
+        return (void*)(intptr_t)STATUS_ERR(ENAMETOOLONG);
     }
 
     struct process* process = 0;
     res = process_load_switch(path, &process);
     
     if (status_is_error(res)) {
-        return (void*)res;
+        return (void*)(intptr_t)res;
     }
 
     res = task_switch(process->main_thread);
@@ -40,7 +40,7 @@ void* isr80h_command6_invoke_system_command(struct interrupt_frame* frame)
     struct command_argument* args = task_virtual_to_physical(task_current(), task_get_stack_item(task_current(), 0));
     
     if (!args || strlen(args->argument) == 0) {
-        return (void*)STATUS_ERR(EINVAL);
+        return (void*)(intptr_t)STATUS_ERR(EINVAL);
     }
 
     struct command_argument* root_command_argument = &args[0];
@@ -49,20 +49,20 @@ void* isr80h_command6_invoke_system_command(struct interrupt_frame* frame)
     char path[MAX_PATH];
     if (!safe_strcpy(path, sizeof(path), "0:/") ||
         !safe_strcat(path, sizeof(path), program_name)) {
-        return (void*)STATUS_ERR(ENAMETOOLONG);
+        return (void*)(intptr_t)STATUS_ERR(ENAMETOOLONG);
     }
 
     struct process* process = 0;
     status_t res = process_load_switch(path, &process);
 
     if (status_is_error(res)) {
-        return (void*)res;
+        return (void*)(intptr_t)res;
     }
     
     res = process_inject_arguments(process, root_command_argument);
     
     if (status_is_error(res)) {
-        return (void*)res;
+        return (void*)(intptr_t)res;
     }
 
     task_switch(process->main_thread);

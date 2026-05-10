@@ -1,22 +1,15 @@
+[BITS 64]
+
 section .asm
 
 global paging_load_directory
-global enable_paging
+global paging_invalidate_tlb_entry
 
 paging_load_directory:
-    push ebp
-    mov ebp, esp
-    mov eax, [ebp+8]
-    and eax, 0xFFFFF000
-    mov cr3, eax
-    pop ebp
+    mov rax, rdi
+    mov cr3, rax
     ret
 
-enable_paging:
-    push ebp
-    mov ebp, esp
-    mov eax, cr0
-    or eax, 0x80000000
-    mov cr0, eax
-    pop ebp
+paging_invalidate_tlb_entry:
+    invlpg [rdi]
     ret

@@ -229,7 +229,7 @@ void print_char(char c)
 void panic(const char *message)
 {
     __asm__ __volatile__("cli");
-    print_w_color("KERNEL PANIC: ", choose_colour(RED, BLACK));
+    print_w_color("\n[KERNEL PANIC] ", choose_colour(RED, BLACK));
     print(message);
 
     for (;;)

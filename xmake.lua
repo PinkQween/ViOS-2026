@@ -6,13 +6,13 @@ set_policy("build.ccache", false)
 -- =========================
 -- TOOLCHAIN
 -- =========================
-toolchain("i686-elf")
+toolchain("x86_64-elf")
     set_kind("standalone")
 
-    set_toolset("cc", "i686-elf-gcc")
-    set_toolset("cxx", "i686-elf-g++")
-    set_toolset("ld", "i686-elf-ld")
-    set_toolset("sh", "i686-elf-gcc")
+    set_toolset("cc", "x86_64-elf-gcc")
+    set_toolset("cxx", "x86_64-elf-g++")
+    set_toolset("ld", "x86_64-elf-ld")
+    set_toolset("sh", "x86_64-elf-gcc")
     set_toolset("as", "nasm")
 toolchain_end()
 
@@ -21,6 +21,8 @@ toolchain_end()
 -- =========================
 local user_programs = {"blank", "shell", "echo"}
 local kernel_sector_offset = 400
+local ovmf_code = "/usr/share/edk2/x64/OVMF_CODE.4m.fd"
+local ovmf_vars = "/usr/share/edk2/x64/OVMF_VARS.4m.fd"
 
 includes("programs/stdlib")
 includes("programs/blank")
@@ -61,7 +63,7 @@ target_end()
 -- =========================
 target("kernel_asm")
     set_kind("object")
-    set_toolchains("i686-elf")
+    set_toolchains("x86_64-elf")
 
     set_toolset("as", "nasm")
     set_objectdir("bin/obj/kernel_asm")
@@ -77,7 +79,7 @@ target("kernel_asm")
         "src/task/task.asm"
     )
 
-    add_asflags("-f elf32", "-g", "-F dwarf")
+    add_asflags("-f elf64", "-g", "-F dwarf")
 target_end()
 
 -- =========================
@@ -85,7 +87,7 @@ target_end()
 -- =========================
 target("kernel_c")
     set_kind("object")
-    set_toolchains("i686-elf")
+    set_toolchains("x86_64-elf")
     set_languages("gnu99")
 
     add_includedirs("include", {public = true})
@@ -103,7 +105,7 @@ target("kernel_c")
         "-g",
         "-O0",
         "-fno-builtin",
-        "-m32",
+        "-m64",
         "-fno-pic",
         "-fno-pie",
         "-fno-stack-protector"
@@ -115,7 +117,7 @@ target_end()
 -- =========================
 target("kernel")
     set_kind("binary")
-    set_toolchains("i686-elf")
+    set_toolchains("x86_64-elf")
 
     set_symbols("debug")
     set_targetdir("bin")
@@ -124,7 +126,7 @@ target("kernel")
     add_deps("kernel_asm", "kernel_c")
 
     add_ldflags(
-        "-m", "elf_i386",
+        "-m", "elf_x86_64",
         "-T", "src/linker.ld",
         "-nostdlib",
         "--no-pie"
@@ -163,7 +165,7 @@ target("image")
         os.exec("mkdir -p bin")
 
         os.exec("dd if=/dev/zero of=bin/os.bin bs=1M count=16 status=none")
-        os.exec("mformat -i bin/os.bin -t 1024 -h 1 -n 32 -B bin/boot.bin ::")
+        os.exec("mformat -i bin/os.bin -t 1024 -h 1 -n 64 -B bin/boot.bin ::")
         os.exec(string.format(
             "dd if=bin/kernel.bin of=bin/os.bin bs=512 seek=%d conv=notrunc status=none",
             kernel_sector_offset
@@ -172,5 +174,36 @@ target("image")
         for _, program in ipairs(user_programs) do
             os.exec("mcopy -o -i bin/os.bin bin/assets/" .. program .. " ::")
         end
+    end)
+target_end()
+
+-- =========================
+-- QEMU
+-- =========================
+target("run-bios")
+    set_kind("phony")
+    set_default(false)
+    add_deps("image")
+
+    on_build(function ()
+        os.exec("qemu-system-x86_64 -drive file=bin/os.bin,format=raw,if=ide")
+    end)
+target_end()
+
+target("run-edk2")
+    set_kind("phony")
+    set_default(false)
+    add_deps("image")
+
+    on_build(function ()
+        if not os.isfile(ovmf_code) or not os.isfile(ovmf_vars) then
+            raise("EDK2 OVMF firmware not found. Expected " .. ovmf_code .. " and " .. ovmf_vars)
+        end
+
+        os.cp(ovmf_vars, "bin/OVMF_VARS.fd")
+        os.exec(string.format(
+            "qemu-system-x86_64 -drive if=pflash,format=raw,readonly=on,file=%s -drive if=pflash,format=raw,file=bin/OVMF_VARS.fd -drive file=bin/os.bin,format=raw,if=ide",
+            ovmf_code
+        ))
     end)
 target_end()

@@ -221,7 +221,7 @@ status_t process_load_for_slot(const char* filename, struct process** process_ou
     }
 
     if (new_process->filetype == PROCESS_TYPE_ELF) {
-        new_process->main_thread->registers.ip = (uint32_t)elf_entry_point(new_process->elf);
+        new_process->main_thread->registers.rip = (uint64_t)elf_entry_point(new_process->elf);
     }
 
     res = process_map_memory(new_process);

@@ -50,7 +50,7 @@ static int pathparser_get_drive_number_by_path(const char** filepath)
 static struct path_root* pathparser_create_root(int drive_number)
 {
     struct path_root* root_path = kmalloc(sizeof(struct path_root));
-    
+
     if (!root_path) {
         return NULL;
     }
@@ -103,7 +103,7 @@ static struct path_part* pathparser_parse_path_part(struct path_part* current_pa
         return NULL;
     }
 
-    struct path_part* next_part = kzalloc(sizeof(struct path_part));
+    struct path_part* next_part = kmalloc(sizeof(struct path_part));
     if (!next_part) {
         kfree(next_part_name);
         *success = false;
