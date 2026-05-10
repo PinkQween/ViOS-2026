@@ -1,5 +1,6 @@
 #include "isr80h/heap.h"
 #include "task/task.h"
+#include "task/process.h"
 
 void* isr80h_command3_malloc(struct interrupt_frame* frame)
 {

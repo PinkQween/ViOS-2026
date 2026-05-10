@@ -7,12 +7,21 @@
 #include "memory/heap/multiheap.h"
 #include "memory/paging/paging.h"
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
 struct heap kernel_minimal_heap;
 struct heap_table kernel_minimal_heap_table;
 
 struct multiheap* kernel_multiheap;
 
-struct e820_entry* kheap_get_allowable_memory_region_for_minimal_heap()
+void kheap_post_paging()
+{
+    multiheap_ready(kernel_multiheap);
+}
+
+static struct e820_entry* kheap_find_minimal_heap_region()
 {
     struct e820_entry* entry = 0;
     size_t total_entries = e820_total_entries();
@@ -40,44 +49,9 @@ struct e820_entry* kheap_get_allowable_memory_region_for_minimal_heap()
     return entry;
 }
 
-static bool kheap_range_is_usable(uintptr_t start, size_t size)
-{
-    uint16_t total_entries = *((uint16_t*)MEMORY_MAP_TOTAL_ENTRIES_LOCATION);
-    struct e820_entry* entries = (struct e820_entry*)MEMORY_MAP_LOCATION;
-    uintptr_t end = start + size;
-
-    if (end < start)
-    {
-        return false;
-    }
-
-    for (uint16_t i = 0; i < total_entries; i++)
-    {
-        if (entries[i].type != 1)
-        {
-            continue;
-        }
-
-        uintptr_t region_start = (uintptr_t)entries[i].base_addr;
-        uintptr_t region_end = region_start + (uintptr_t)entries[i].length;
-
-        if (region_end < region_start)
-        {
-            continue;
-        }
-
-        if (start >= region_start && end <= region_end)
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 void kheap_init()
 {
-    struct e820_entry* entry = kheap_get_allowable_memory_region_for_minimal_heap();
+    struct e820_entry* entry = kheap_find_minimal_heap_region();
 
     if (!entry)
     {
@@ -147,7 +121,7 @@ void kheap_init()
         panic("Failed to create kernel multiheap");
     }
 
-    multiheap_add_exsisting_heap(kernel_multiheap, &kernel_minimal_heap, MULTIHEAP_FLAG_EXTERNALLY_OWNED);
+    multiheap_add_existing_heap(kernel_multiheap, &kernel_minimal_heap, MULTIHEAP_FLAG_EXTERNALLY_OWNED);
 
     struct e820_entry* used_entry = entry;
 
@@ -241,7 +215,73 @@ void* palloc(size_t size)
     return kpalloc(size);
 }
 
+size_t kheap_total_size()
+{
+    if (!kernel_multiheap)
+    {
+        return 0;
+    }
+
+    size_t total = 0;
+    struct multiheap_single_heap* current = kernel_multiheap->first_multiheap;
+
+    while (current)
+    {
+        total += heap_total_size(current->heap);
+        current = current->next;
+    }
+
+    return total;
+}
+
+size_t kheap_total_used()
+{
+    if (!kernel_multiheap)
+    {
+        return 0;
+    }
+
+    size_t total = 0;
+    struct multiheap_single_heap* current = kernel_multiheap->first_multiheap;
+
+    while (current)
+    {
+        total += heap_total_used(current->heap);
+        current = current->next;
+    }
+
+    return total;
+}
+
+size_t kheap_total_free()
+{
+    size_t total_size = kheap_total_size();
+    size_t total_used = kheap_total_used();
+
+    if (total_used >= total_size)
+    {
+        return 0;
+    }
+
+    return total_size - total_used;
+}
+
 void kfree(void* ptr)
 {
     multiheap_free(kernel_multiheap, ptr);
+}
+
+void* kpzalloc(size_t size)
+{
+    void* ptr = kpalloc(size);
+    if (!ptr)
+        return 0;
+
+    memset(ptr, 0x00, size);
+    return ptr;
+}
+
+void* krealloc(void* old_ptr, size_t new_size)
+{
+    return multiheap_realloc(kernel_multiheap, old_ptr, new_size);
 }

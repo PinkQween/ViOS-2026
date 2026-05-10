@@ -1,69 +1,267 @@
+/**
+ * Copyright (c) 2026 Hanna Skairipa.
+ *
+ * @file task.c
+ * @brief Task scheduler and task management implementation.
+ */
+
 #include "task/task.h"
+
 #include "console/console.h"
-#include "memory/heap/kheap.h"
-#include "string/string.h"
-#include "memory/paging/paging.h"
-#include "memory/memory.h"
 #include "kernel.h"
+#include "loader/elf/elfloader.h"
+#include "memory/heap/kheap.h"
+#include "memory/memory.h"
+#include "memory/paging/paging.h"
+#include "task/process.h"
+#include "string/string.h"
 
-struct task* current_task = 0;
+struct task* current_task = NULL;
 
-struct task* task_tail = 0;
-struct task* task_head = 0;
+struct task* task_head = NULL;
+struct task* task_tail = NULL;
 
-struct task* task_current()
+status_t task_init(struct task* task, struct process* process);
+static struct task* task_get_next_task(void);
+static void task_list_remove(struct task* task);
+static status_t task_page_task(struct task* task);
+
+struct task* task_current(void)
 {
     return current_task;
 }
 
-struct task* task_get_next(struct task* task)
+struct task* task_new(struct process* process)
 {
-    if (task->next) {
-        return task->next;
-    } else {
+    struct task* task = kzalloc(sizeof(struct task));
+
+    if (!task)
+    {
+        return NULL;
+    }
+
+    status_t res = task_init(task, process);
+
+    if (status_is_error(res))
+    {
+        kfree(task);
+        return NULL;
+    }
+
+    if (!task_head)
+    {
+        task_head = task;
+        task_tail = task;
+        current_task = task;
+
+        return task;
+    }
+
+    task_tail->next = task;
+    task->prev = task_tail;
+    task_tail = task;
+
+    return task;
+}
+
+static struct task* task_get_next_task(void)
+{
+    if (!current_task)
+    {
+        return NULL;
+    }
+
+    if (!current_task->next)
+    {
         return task_head;
     }
+
+    return current_task->next;
 }
 
 static void task_list_remove(struct task* task)
 {
-    if (task->prev) {
+    if (!task)
+    {
+        return;
+    }
+
+    if (task->prev)
+    {
         task->prev->next = task->next;
-    } else {
+    }
+
+    if (task->next)
+    {
+        task->next->prev = task->prev;
+    }
+
+    if (task == task_head)
+    {
         task_head = task->next;
     }
 
-    if (task->next) {
-        task->next->prev = task->prev;
-    } else {
+    if (task == task_tail)
+    {
         task_tail = task->prev;
     }
 
-    if (current_task == task) {
-        current_task = task_get_next(current_task);
+    if (task == current_task)
+    {
+        current_task = task_get_next_task();
     }
 }
 
 void task_free(struct task* task)
 {
-    paging_desc_free(task->page_directory);
+    if (!task)
+    {
+        return;
+    }
+
     task_list_remove(task);
+
     kfree(task);
 }
 
+void task_next(void)
+{
+    struct task* next_task = task_get_next_task();
+
+    if (!next_task)
+    {
+        panic("No tasks available!\n");
+    }
+
+    task_switch(next_task);
+
+    task_return(&next_task->registers);
+}
+
+status_t task_switch(struct task* task)
+{
+    if (!task || !task->process)
+    {
+        return STATUS_ERR(EINVAL);
+    }
+
+    current_task = task;
+
+    paging_switch(task->process->paging_desc);
+
+    return STATUS_OK;
+}
+
+struct paging_desc* task_get_paging_descriptor(struct task* task)
+{
+    if (!task || !task->process)
+    {
+        return NULL;
+    }
+
+    return task->process->paging_desc;
+}
+
+struct paging_desc* task_current_paging_descriptor(void)
+{
+    if (!current_task)
+    {
+        return NULL;
+    }
+
+    return task_get_paging_descriptor(current_task);
+}
+
+void task_save_state(struct task* task, struct interrupt_frame* frame)
+{
+    if (!task || !frame)
+    {
+        return;
+    }
+
+    task->registers.rip = frame->rip;
+    task->registers.cs = frame->cs;
+    task->registers.rflags = frame->rflags;
+    task->registers.rsp = frame->user_rsp;
+    task->registers.ss = frame->ss;
+
+    task->registers.rax = frame->rax;
+    task->registers.rbx = frame->rbx;
+    task->registers.rcx = frame->rcx;
+    task->registers.rdx = frame->rdx;
+
+    task->registers.rbp = frame->rbp;
+    task->registers.rsi = frame->rsi;
+    task->registers.rdi = frame->rdi;
+}
+
+void task_current_save_state(struct interrupt_frame* frame)
+{
+    if (!current_task)
+    {
+        panic("No current task!\n");
+    }
+
+    task_save_state(current_task, frame);
+}
+
+status_t task_page(void)
+{
+    if (!current_task)
+    {
+        return STATUS_ERR(EINVAL);
+    }
+
+    user_registers();
+
+    paging_switch(current_task->process->paging_desc);
+
+    return STATUS_OK;
+}
+
+static status_t task_page_task(struct task* task)
+{
+    if (!task)
+    {
+        return STATUS_ERR(EINVAL);
+    }
+
+    user_registers();
+
+    paging_switch(task->process->paging_desc);
+
+    return STATUS_OK;
+}
+
+void task_run_root_task(void)
+{
+    if (!task_head)
+    {
+        panic("No root task!\n");
+    }
+
+    status_t res = task_switch(task_head);
+
+    if (status_is_error(res))
+    {
+        panic_status("Failed to switch task", res);
+    }
+
+    task_return(&task_head->registers);
+}
 
 status_t task_init(struct task* task, struct process* process)
 {
     memset(task, 0, sizeof(struct task));
 
-    task->page_directory = paging_desc_new(PAGING_MAP_LEVEL_4);
-    if (!task->page_directory) {
-        return STATUS_ERR(ENOMEM);
+    task->registers.rip = PROGRAM_VIRTUAL_ADDRESS;
+
+    if (process && process->filetype == PROCESS_TYPE_ELF)
+    {
+        task->registers.rip =
+            (uint64_t)elf_entry_point(process->elf);
     }
 
-    paging_map_e820_memory_regions(task->page_directory);
-    
-    task->registers.rip = PROGRAM_VIRTUAL_ADDRESS;
     task->registers.ss = USER_DATA_SEGMENT;
     task->registers.cs = USER_CODE_SEGMENT;
     task->registers.rflags = 0x202;
@@ -74,143 +272,55 @@ status_t task_init(struct task* task, struct process* process)
     return STATUS_OK;
 }
 
-status_t task_switch(struct task* task)
+status_t copy_string_from_task(struct task* task,
+                               void* dest,
+                               const char* src,
+                               int max_len)
 {
-    if (!task) {
+    if (!task || !dest || !src)
+    {
         return STATUS_ERR(EINVAL);
     }
 
-    current_task = task;
-
-    paging_switch(task->page_directory);
-
-    return STATUS_OK;
-}
-
-struct task* task_new(struct process* process)
-{
-    struct task* task = kzalloc(sizeof(struct task));
-
-    if (!task) {
-        return 0;
-    }
-
-    status_t res = task_init(task, process);
-
-    if (status_is_error(res)) {
-        paging_desc_free(task->page_directory);
-        kfree(task);
-        return 0;
-    }
-
-    if (!task_head) {
-        task_head = task;
-        task_tail = task;
-        current_task = task;
-    } else {
-        task_tail->next = task;
-        task->prev = task_tail;
-        task_tail = task;
-    }
-
-    return task;
-}
-
-void task_page()
-{
-    user_registers();
-    if (!current_task) {
-        return;
-    }
-    paging_switch(current_task->page_directory);
-}
-
-void task_run_root_task()
-{
-    if (!current_task) {
-        panic("No root task to run!");    
-    }
-
-    status_t res = task_switch(task_head);
-    if (status_is_error(res)) {
-        panic_status("Failed to switch to root task", res);
-    }
-
-    terminal_clear_color_and_reset_cursor(choose_colour(WHITE, BLACK));
-
-    task_return(&task_head->registers);
-}
-
-void task_save_state(struct task* task, struct interrupt_frame* frame)
-{
-    task->registers.rip = frame->rip;
-    task->registers.cs = frame->cs;
-    task->registers.rflags = frame->rflags;
-    task->registers.rsp = frame->user_rsp;
-    task->registers.ss = frame->ss;
-    task->registers.rax = frame->rax;
-    task->registers.rcx = frame->rcx;
-    task->registers.rdx = frame->rdx;
-    task->registers.rbx = frame->rbx;
-    task->registers.rbp = frame->rbp;
-    task->registers.rsi = frame->rsi;
-    task->registers.rdi = frame->rdi;
-}
-
-void task_current_save_state(struct interrupt_frame* frame)
-{
-    if (!task_current()) {
-        panic("No current task to save state for!");
-    }
-
-    struct task* task = task_current();
-    task_save_state(task, frame);
-}
-
-status_t copy_string_from_task(struct task* task, void* dest, const char* src, int max_len)
-{
-    if (!task || !task->page_directory || !dest || !src || max_len <= 0 || max_len >= PAGING_PAGE_SIZE_BYTES) {
+    if (max_len <= 0 || max_len >= PAGING_PAGE_SIZE)
+    {
         return STATUS_ERR(EINVAL);
     }
 
-    char* tmp = kzalloc(max_len);
-    
-    if (!tmp) {
+    char* tmp = kzalloc((size_t)max_len);
+
+    if (!tmp)
+    {
         return STATUS_ERR(ENOMEM);
     }
 
-    status_t res = paging_map(task->page_directory, tmp, tmp, PAGING_IS_WRITEABLE | PAGING_IS_PRESENT | PAGING_ACCESSIBLE_FROM_ALL);
-    if (status_is_error(res)) {
-        kfree(tmp);
-        return res;
-    }
+    task_page_task(task);
 
-    paging_switch(task->page_directory);
-
-    strncpy(tmp, src, max_len);
+    strncpy(tmp, src, (size_t)max_len);
 
     kernel_page();
 
-    strncpy(dest, tmp, max_len);
+    strncpy(dest, tmp, (size_t)max_len);
 
     kfree(tmp);
-    
+
     return STATUS_OK;
-}
-
-void task_page_task(struct task* task)
-{
-    user_registers();
-
-    paging_switch(task->page_directory);
 }
 
 void* task_get_stack_item(struct task* task, int index)
 {
-    uint64_t* rsp = (uint64_t*)task->registers.rsp;
-    void* item = 0;
-    
+    if (!task)
+    {
+        return NULL;
+    }
+
+    uint64_t* rsp =
+        (uint64_t*)task->registers.rsp;
+
+    void* item = NULL;
+
     task_page_task(task);
+
     item = (void*)rsp[index];
 
     kernel_page();
@@ -218,24 +328,16 @@ void* task_get_stack_item(struct task* task, int index)
     return item;
 }
 
-void* task_virtual_to_physical(struct task* task, void* virtual_address)
+void* task_virtual_to_physical(struct task* task,
+                               void* virtual_address)
 {
-    if (!task || !task->page_directory || !virtual_address) {
+    if (!task || !task->process)
+    {
         return NULL;
     }
-    
-    return paging_get_physical_address(task->page_directory, virtual_address);
-}
 
-void task_next()
-{
-    struct task* next_task = task_get_next(current_task);
-
-    if (!next_task) {
-        task_run_root_task();
-        return;
-    }
-
-    task_switch(next_task);
-    task_return(&next_task->registers);
+    return paging_get_physical_address(
+        task->process->paging_desc,
+        virtual_address
+    );
 }

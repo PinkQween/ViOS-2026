@@ -1,46 +1,21 @@
 #ifndef PAGING_H
 #define PAGING_H
 
-#include <stdint.h>
-#include <stdbool.h>
-#include "status.h"
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
 
 /**
  * @file paging.h
- * @brief x86_64 4-Level Paging Manager.
- *
- * This module provides a basic implementation of long mode paging
- * for x86_64 kernels.
- *
- * Supported paging hierarchy:
- *
- * PML4
- *  └── PDPT
- *       └── PD
- *            └── PT
- *                 └── 4KB PAGE
- *
- * Features:
- * - Dynamic page table allocation
- * - Virtual → physical mapping
- * - Address translation
- * - CR3 switching
- * - Page alignment helpers
- * - TLB invalidation support
- *
- * This implementation currently supports:
- * - 4KB pages
- * - 4-level paging only
- *
- * Unsupported:
- * - Huge pages
- * - 5-level paging
- * - PCID
- * - Copy-on-write
+ * @brief x86_64 4-level paging manager.
  *
  * @author Hanna Skairipa
  * @date 2026-05-09
  */
+
+#include <stdint.h>
+#include <stdbool.h>
+#include "status.h"
 
 /* =========================================================
  * PAGING CONSTANTS
@@ -146,11 +121,24 @@ struct paging_desc* paging_desc_new(
     paging_map_level_t root_map_level
 );
 
+/**
+ * @brief Create an identity-mapped paging descriptor.
+ *
+ * @param bytes Number of low-memory bytes to identity map.
+ * @param flags Page flags to apply to each mapping.
+ *
+ * @return New paging descriptor or NULL on failure.
+ */
 struct paging_desc* paging_desc_new_identity(
     size_t bytes,
     int flags
 );
 
+/**
+ * @brief Free a paging descriptor and its owned paging structures.
+ *
+ * @param desc Paging descriptor to free.
+ */
 void paging_desc_free(struct paging_desc* desc);
 
 /**
@@ -289,5 +277,12 @@ void paging_invalidate_tlb_entry(void* addr);
  * @param desc Paging descriptor.
  */
 void paging_map_e820_memory_regions(struct paging_desc* desc);
+
+/**
+ * @brief Get the current paging descriptor.
+ *
+ * @return Current paging descriptor.
+ */
+struct paging_desc* paging_current_descriptor();
 
 #endif /* PAGING_H */

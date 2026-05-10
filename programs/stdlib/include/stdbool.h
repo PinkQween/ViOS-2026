@@ -1,6 +1,18 @@
 #ifndef STDBOOL_H
 #define STDBOOL_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file stdbool.h
+ * @brief User-space boolean type definitions.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 #define bool _Bool
 #define true 1
 #define false 0

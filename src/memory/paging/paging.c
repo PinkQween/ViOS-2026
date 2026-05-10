@@ -2,31 +2,70 @@
 #include "config.h"
 #include "memory/heap/kheap.h"
 #include "memory/memory.h"
+#include "kernel.h"
+#include "console/console.h"
 
 static struct paging_desc* current_paging_desc = NULL;
 
 /* =========================================================
  * INTERNAL HELPERS
  * ========================================================= */
+static bool paging_null_entry(struct paging_desc_entry* entry)
+{
+    struct paging_desc_entry null_desc = {0};
+    return memcmp(entry, &null_desc, sizeof(struct paging_desc_entry)) == 0;
+}
+
+static void paging_desc_entry_free(
+    struct paging_desc_entry* table,
+    paging_map_level_t level,
+    bool free_self
+)
+{
+    if (!table)
+    {
+        return;
+    }
+
+    if (level > 1)
+    {
+        for (int i = 0;
+             i < PAGING_TOTAL_ENTRIES_PER_TABLE;
+             i++)
+        {
+            struct paging_desc_entry* entry =
+                &table[i];
+
+            if (!paging_null_entry(entry) &&
+                entry->present)
+            {
+                struct paging_desc_entry* child =
+                    (struct paging_desc_entry*)
+                    (
+                        ((uintptr_t)entry->address)
+                        << 12
+                    );
+
+                paging_desc_entry_free(
+                    child,
+                    level - 1,
+                    true
+                );
+            }
+        }
+    }
+
+    if (free_self)
+    {
+        kfree(table);
+    }
+}
 
 static bool paging_map_level_is_valid(
     paging_map_level_t level
 )
 {
     return level == PAGING_MAP_LEVEL_4;
-}
-
-static bool paging_null_entry(
-    struct paging_desc_entry* entry
-)
-{
-    struct paging_desc_entry null_entry = {0};
-
-    return memcmp(
-        entry,
-        &null_entry,
-        sizeof(struct paging_desc_entry)
-    ) == 0;
 }
 
 static struct paging_pml_entries* paging_pml_entries_new()
@@ -148,13 +187,14 @@ void paging_desc_free(struct paging_desc* desc)
         return;
     }
 
-    /*
-     * Page-table pages are allocated from the simple block heap. The current
-     * heap has no ownership walk for nested paging tables yet, so this releases
-     * the descriptor root and keeps the API stable for callers.
-     */
     if (desc->pml)
     {
+        paging_desc_entry_free(
+            desc->pml->entries,
+            desc->level,
+            false
+        );
+
         kfree(desc->pml);
     }
 
@@ -177,7 +217,7 @@ void paging_switch(struct paging_desc* desc)
 void paging_map_e820_memory_regions(struct paging_desc* desc)
 {
     paging_map_to(desc, (void*)0, (void*)0, (void*)0x100000, PAGING_IS_PRESENT | PAGING_IS_WRITEABLE);
-    
+
     size_t total_entries = e820_total_entries();
     
     for (size_t i = 0; i < total_entries; i++)
@@ -247,12 +287,18 @@ int paging_map(
                 PAGING_TOTAL_ENTRIES_PER_TABLE
             );
 
+        if (!new_pdpt)
+        {
+            return STATUS_ERR(ENOMEM);
+        }
+
         pml4_entry->address =
             ((uintptr_t)new_pdpt) >> 12;
 
         pml4_entry->present = 1;
         pml4_entry->read_write = 1;
     }
+    
     paging_promote_entry_flags(pml4_entry, flags);
 
     struct paging_desc_entry* pdpt_entries =
@@ -349,12 +395,15 @@ int paging_map_range(
 {
     int result = STATUS_OK;
 
+    uintptr_t virt_addr = (uintptr_t)virt;
+    uintptr_t phys_addr = (uintptr_t)phys;
+
     for (size_t i = 0; i < count; i++)
     {
         result = paging_map(
             desc,
-            virt,
-            phys,
+            (void*)virt_addr,
+            (void*)phys_addr,
             flags
         );
 
@@ -363,8 +412,8 @@ int paging_map_range(
             break;
         }
 
-        virt += PAGING_PAGE_SIZE;
-        phys += PAGING_PAGE_SIZE;
+        virt_addr += PAGING_PAGE_SIZE;
+        phys_addr += PAGING_PAGE_SIZE;
     }
 
     return result;
@@ -390,12 +439,17 @@ int paging_map_to(
         return -1;
     }
 
-    uint64_t total_bytes =
+    uintptr_t total_bytes =
         (uintptr_t)phys_end -
         (uintptr_t)phys;
 
     size_t total_pages =
         total_bytes / PAGING_PAGE_SIZE;
+
+    if (total_bytes % PAGING_PAGE_SIZE)
+    {
+        total_pages++;
+    }
 
     return paging_map_range(
         desc,
@@ -406,11 +460,8 @@ int paging_map_to(
     );
 }
 
-/* =========================================================
- * ADDRESS TRANSLATION
- * ========================================================= */
 
-void* paging_get_physical_address(
+struct paging_desc_entry* paging_get(
     struct paging_desc* desc,
     void* virt
 )
@@ -425,56 +476,79 @@ void* paging_get_physical_address(
     struct paging_desc_entry* pml4_entry =
         &desc->pml->entries[pml4_index];
 
-    if (!pml4_entry->present)
+    if (paging_null_entry(pml4_entry) || !pml4_entry->present)
     {
         return NULL;
     }
 
-    struct paging_desc_entry* pdpt =
+    struct paging_desc_entry* pdpt_entries =
         (struct paging_desc_entry*)
         (
             ((uintptr_t)pml4_entry->address) << 12
         );
 
     struct paging_desc_entry* pdpt_entry =
-        &pdpt[pdpt_index];
+        &pdpt_entries[pdpt_index];
 
-    if (!pdpt_entry->present)
+    if (paging_null_entry(pdpt_entry) || !pdpt_entry->present)
     {
         return NULL;
     }
 
-    struct paging_desc_entry* pd =
+    struct paging_desc_entry* pd_entries =
         (struct paging_desc_entry*)
         (
             ((uintptr_t)pdpt_entry->address) << 12
         );
 
     struct paging_desc_entry* pd_entry =
-        &pd[pd_index];
+        &pd_entries[pd_index];
 
-    if (!pd_entry->present)
+    if (paging_null_entry(pd_entry) || !pd_entry->present)
     {
         return NULL;
     }
 
-    struct paging_desc_entry* pt =
+    struct paging_desc_entry* pt_entries =
         (struct paging_desc_entry*)
         (
             ((uintptr_t)pd_entry->address) << 12
         );
 
     struct paging_desc_entry* pt_entry =
-        &pt[pt_index];
+        &pt_entries[pt_index];
 
-    if (!pt_entry->present)
+    if (paging_null_entry(pt_entry) || !pt_entry->present)
     {
         return NULL;
     }
 
-    uintptr_t phys =
-        (((uintptr_t)pt_entry->address) << 12) |
-        (va & 0xFFF);
+    return pt_entry;
+}
 
-    return (void*)phys;
+/* =========================================================
+ * ADDRESS TRANSLATION
+ * ========================================================= */
+
+void* paging_get_physical_address(
+    struct paging_desc* desc,
+    void* virt
+)
+{
+    struct paging_desc_entry* entry = paging_get(desc, virt);
+    
+    if (!entry || paging_null_entry(entry) || !entry->present)
+    {
+        return NULL;
+    }
+
+    uintptr_t phys_base = ((uintptr_t)entry->address) << 12;
+    uintptr_t offset = (uintptr_t)virt & 0xFFF;
+
+    return (void*)(phys_base + offset);
+}
+
+struct paging_desc* paging_current_descriptor()
+{
+    return current_paging_desc;
 }

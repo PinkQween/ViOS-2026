@@ -1,6 +1,18 @@
 #ifndef TSS_H
 #define TSS_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file tss.h
+ * @brief Task State Segment (TSS) layout and setup API.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 #include "stdint.h"
 
 /**

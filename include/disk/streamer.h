@@ -1,6 +1,18 @@
 #ifndef DISK_STREAMER_H
 #define DISK_STREAMER_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file streamer.h
+ * @brief Sequential disk stream reader interface.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 #include "disk/disk.h"
 
 /** Sequential byte-oriented read helper over sector-based disk IO. */

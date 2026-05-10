@@ -1,6 +1,18 @@
 #ifndef PATH_PARSER_H
 #define PATH_PARSER_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file pparser.h
+ * @brief Filesystem path parser structures and API.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 #include "status.h"
 
 /** Parsed absolute path root including drive number. */

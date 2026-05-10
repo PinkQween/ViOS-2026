@@ -1,6 +1,18 @@
 #ifndef FAT16_PRIV_H
 #define FAT16_PRIV_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file fat16_priv.h
+ * @brief Internal FAT16 filesystem structures and helpers.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 #include "fs/fat16/fat16.h"
 #include "status.h"
 #include "config.h"

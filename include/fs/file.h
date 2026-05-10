@@ -1,6 +1,18 @@
 #ifndef FILE_H
 #define FILE_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file file.h
+ * @brief Virtual filesystem interface and file descriptor API.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 #include "fs/pparser.h"
 #include "status.h"
 

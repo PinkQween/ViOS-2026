@@ -1,6 +1,18 @@
 #ifndef FAT16_H
 #define FAT16_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file fat16.h
+ * @brief FAT16 filesystem registration interface.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 #include "fs/file.h"
 
 /**

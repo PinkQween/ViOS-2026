@@ -1,6 +1,18 @@
 #ifndef PS2_KEYBOARD_H
 #define PS2_KEYBOARD_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file ps2.h
+ * @brief PS/2 keyboard driver interface.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 #define PS2_PORT 0x64
 #define PS2_COMMAND_ENABLE_FIRST_PORT 0xAE
 
@@ -19,6 +31,12 @@ struct interrupt_frame;
  */
 struct keyboard* ps2_init();
 
+/**
+ * Handle a PS/2 keyboard interrupt.
+ *
+ * @param frame Saved interrupt frame.
+ * @return None.
+ */
 void ps2_keyboard_handle_interrupt(struct interrupt_frame* frame);
 
 #endif /* PS2_KEYBOARD_H */

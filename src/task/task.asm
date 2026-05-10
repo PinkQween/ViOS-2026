@@ -31,7 +31,7 @@ restore_general_purpose_registers:
 
 
 user_registers:
-    mov ax, 0x23
+    mov ax, 0x2B
     mov ds, ax
     mov es, ax
     mov fs, ax

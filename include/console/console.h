@@ -1,6 +1,18 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file console.h
+ * @brief Text console and VGA output interface.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 #include "status.h"
 
 /** Width of text-mode VGA framebuffer in characters. */
@@ -85,6 +97,12 @@ void panic_status(const char *message, status_t status);
  */
 char choose_colour(char fg, char bg);
 
+/**
+ * Clear the VGA terminal and reset the cursor to the top-left cell.
+ *
+ * @param colour Combined foreground/background colour byte to apply.
+ * @return None.
+ */
 void terminal_clear_color_and_reset_cursor(char colour);
 
 #endif /* CONSOLE_H */

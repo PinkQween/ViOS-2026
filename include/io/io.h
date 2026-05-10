@@ -1,22 +1,19 @@
 #ifndef IO_H
 #define IO_H
 
-#include <stdint.h>
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
 
 /**
  * @file io.h
  * @brief Low-level x86 port I/O interface.
- * 
- * This header provides functions to perform single and string-based
- * input/output operations on x86 I/O ports. These functions are
- * intended for use in kernel development or bare-metal programming.
- * 
- * All functions assume that the caller has the necessary privilege
- * level to access hardware ports (usually ring 0).
- * 
+ *
  * @author Hanna Skairipa
  * @date 2026-05-09
  */
+
+#include "stdint.h"
 
 /* =========================================================
  * STRING INPUT FUNCTIONS (port -> memory)

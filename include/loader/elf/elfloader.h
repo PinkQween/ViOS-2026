@@ -1,6 +1,18 @@
 #ifndef ELFLOADER_H
 #define ELFLOADER_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file elfloader.h
+ * @brief ELF loader interface for kernel process startup.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 #include "status.h"
 
 #include "stddef.h"
@@ -81,26 +93,94 @@ struct elf_file {
     int needed_count;
 };
 
-// Allocation helpers
+/**
+ * Allocate and initialize an ELF file descriptor.
+ *
+ * @return New ELF file descriptor, or NULL on allocation failure.
+ */
 struct elf_file* elf_file_new();
+
+/**
+ * Free an ELF file descriptor and owned backing memory.
+ *
+ * @param file ELF file descriptor to free.
+ * @return None.
+ */
 void elf_file_free(struct elf_file* file);
 
-// ELF loading
+/**
+ * Load an ELF file from the filesystem.
+ *
+ * @param filename Path to the ELF file.
+ * @param file_out Output pointer for the loaded ELF descriptor.
+ * @return STATUS_OK on success, negative status_t on error.
+ */
 status_t elf_load(const char* filename, struct elf_file** file_out);
+
+/**
+ * Close and free a loaded ELF file descriptor.
+ *
+ * @param file ELF file descriptor to close.
+ * @return None.
+ */
 void elf_close(struct elf_file* file);
 
-// Dynamic linking
+/**
+ * Load dynamic libraries referenced by a loaded ELF file.
+ *
+ * @param file Loaded ELF file descriptor.
+ * @return STATUS_OK on success, negative status_t on error.
+ */
 status_t elf_load_needed_libraries(struct elf_file* file);
+
+/**
+ * Apply dynamic relocations for a loaded ELF file.
+ *
+ * @param file Loaded ELF file descriptor.
+ * @return STATUS_OK on success, negative status_t on error.
+ */
 status_t elf_apply_relocations(struct elf_file* file);
 
-// Symbols
+/**
+ * Resolve a symbol address from a loaded ELF file and its dependencies.
+ *
+ * @param file Loaded ELF file descriptor.
+ * @param symbol_name Symbol name to resolve.
+ * @param out_addr Output pointer for the resolved address.
+ * @return STATUS_OK on success, negative status_t on error.
+ */
 status_t elf_lookup_symbol(struct elf_file* file, const char* symbol_name, void** out_addr);
 
-// Headers & execution
+/**
+ * Get the native ELF header pointer for a loaded file.
+ *
+ * @param file Loaded ELF file descriptor.
+ * @return Pointer to the ELF header.
+ */
 void* elf_header(struct elf_file* file);
+
+/**
+ * Get the ELF32 header for a loaded file.
+ *
+ * @param file Loaded ELF file descriptor.
+ * @return ELF32 header pointer, or NULL if the file is not ELF32.
+ */
 struct elf32_header* elf32_header(struct elf_file* file);
+
+/**
+ * Get the ELF64 header for a loaded file.
+ *
+ * @param file Loaded ELF file descriptor.
+ * @return ELF64 header pointer, or NULL if the file is not ELF64.
+ */
 struct elf64_header* elf64_header(struct elf_file* file);
 
+/**
+ * Get the executable entry point for a loaded ELF file.
+ *
+ * @param file Loaded ELF file descriptor.
+ * @return Entry point pointer.
+ */
 void* elf_entry_point(struct elf_file* file);
 
 #endif // ELFLOADER_H

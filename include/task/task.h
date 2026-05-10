@@ -1,12 +1,33 @@
 #ifndef TASK_H
 #define TASK_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file task.h
+ * @brief Kernel task scheduling and CPU context management.
+ *
+ * Provides task creation, task switching, register state
+ * management, paging helpers, and task memory utilities.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
+#include <stdint.h>
+
 #include "config.h"
-#include "memory/paging/paging.h"
-#include "task/process.h"
 #include "status.h"
 #include "idt/idt.h"
+#include "memory/paging/paging.h"
 
+struct process;
+
+/**
+ * @brief Saved CPU register state for a task.
+ */
 struct registers
 {
     uint64_t rdi;
@@ -24,137 +45,213 @@ struct registers
     uint64_t ss;
 };
 
+/**
+ * @brief Represents a schedulable kernel task.
+ */
 struct task
 {
-    struct paging_desc *page_directory;
-
+    /**
+     * @brief Saved CPU registers for this task.
+     */
     struct registers registers;
 
+    /**
+     * @brief Next task in scheduler linked list.
+     */
     struct task* next;
 
+    /**
+     * @brief Previous task in scheduler linked list.
+     */
     struct task* prev;
 
+    /**
+     * @brief Owning process.
+     */
     struct process* process;
 };
 
 /**
- * Returns the currently running task.
- * 
- * @return The currently running task.
+ * @brief Currently running task.
  */
-struct task* task_current();
+extern struct task* current_task;
 
 /**
- * Switches to the next task in the task list, saving the state of the current task and restoring the state of the next task. This function is called by the scheduler to perform a context switch between tasks.
+ * @brief Head of the scheduler task list.
  */
-void task_next();
+extern struct task* task_head;
 
 /**
- * Frees a task and removes it from the task list.
- * 
- * @param task The task to free.
+ * @brief Tail of the scheduler task list.
  */
-void task_free(struct task* task);
+extern struct task* task_tail;
 
 /**
- * Initializes a task.
- * 
- * @param task The task to initialize.
- * @return STATUS_OK on success, or an error code on failure.
+ * @brief Returns the currently running task.
+ *
+ * @return Current task pointer.
  */
-status_t task_init(struct task* task, struct process* process);
+struct task* task_current(void);
 
 /**
- * Creates a new task and adds it to the task list.
- * 
- * @param process The process to associate with the new task.
- * @return The newly created task, or 0 on failure.
+ * @brief Creates a new task for a process.
+ *
+ * @param process Owning process.
+ *
+ * @return Newly created task or NULL on failure.
  */
 struct task* task_new(struct process* process);
 
 /**
- * 
- * Restores general-purpose registers, segment registers, instruction pointer, and flags from the task's saved state and switches to the task's page directory.
- * 
- * @param registers The registers to restore.
+ * @brief Frees a task and removes it from the scheduler list.
+ *
+ * @param task Task to free.
  */
-void restore_general_purpose_registers(struct registers* registers);
+void task_free(struct task* task);
 
 /**
- * Returns from the current task and switches to the next task.
- * 
- * @param registers The registers to use for the switch.
+ * @brief Initializes a task structure.
+ *
+ * @param task Task to initialize.
+ * @param process Owning process.
+ *
+ * @return STATUS_OK on success.
  */
-void task_return(struct registers* registers);
+status_t task_init(struct task* task, struct process* process);
 
 /**
- * Sets up the user-mode registers for a new task.
- * 
- */
-void user_registers();
-
-/**
- * Switches to the specified task.
- * 
- * @param task The task to switch to.
- * @return STATUS_OK on success, or an error code on failure.
+ * @brief Switches execution to another task.
+ *
+ * Updates the current task pointer and switches
+ * to the task's paging descriptor.
+ *
+ * @param task Task to switch to.
+ *
+ * @return STATUS_OK on success.
  */
 status_t task_switch(struct task* task);
 
 /**
- * Switches to the next task in the task list.
- * 
+ * @brief Switches to the next scheduled task.
  */
-void task_page();
+void task_next(void);
 
 /**
- * Runs the root task, which is the first task created by the kernel and is responsible for running the initial user-space process. This function should be called after all necessary initialization is complete and the kernel is ready to start executing user-space code.
+ * @brief Switches to the current task paging context.
  */
-void task_run_root_task();
+status_t task_page(void);
 
 /**
- * Loads a user-space process from the specified filename and creates a new task for it.
- * 
- * @param filename The filename of the process to load.
- * @param process A pointer to a process pointer that will be set to the newly created process structure on success.
- * @return STATUS_OK on success, or an error code on failure.
+ * @brief Runs the first/root task.
  */
-status_t process_load(const char* filename, struct process** process);
+void task_run_root_task(void);
 
 /**
- * Saves the state of the currently running task into its task structure. This function should be called during an interrupt or system call to capture the current state of the task before switching to another task or returning to user space.
- * 
- * @param frame The interrupt frame containing the current state of the CPU registers and other information at the time of the interrupt or system call.
+ * @brief Saves interrupt frame state into a task.
+ *
+ * @param task Target task.
+ * @param frame Interrupt frame.
  */
-void task_current_save_state(struct interrupt_frame* frame);
+void task_save_state(
+    struct task* task,
+    struct interrupt_frame* frame
+);
 
 /**
- * Copies string from task memory and updates the task's registers to point to the string. This function is used to pass string arguments from user space to kernel space when switching to a new task.
- * 
- * @param task The task to copy the string from.
- * @param dest The destination in the task's memory.
- * @param src The source string.
- * @param max_len The maximum length of the string to copy.
- * @return STATUS_OK on success, or an error code on failure.
+ * @brief Saves the current task state.
+ *
+ * @param frame Interrupt frame.
  */
-status_t copy_string_from_task(struct task* task, void* dest, const char* src, int max_len);   
+void task_current_save_state(
+    struct interrupt_frame* frame
+);
 
 /**
- * Gets an item from the task's stack.
- * 
- * @param task The task to get the stack item from.
- * @param index The index of the item to get.
- * @return A pointer to the requested stack item.
+ * @brief Restores CPU registers from a task state.
+ *
+ * Implemented in assembly.
+ *
+ * @param registers Register state.
  */
-void* task_get_stack_item(struct task* task, int index);
+void restore_general_purpose_registers(
+    struct registers* registers
+);
 
 /**
- * Translates a virtual address in the task's address space to a physical address. This function is used to access memory in the task's address space from the kernel.
- * 
- * @param task The task whose address space to translate.
- * @param virtual_address The virtual address to translate.
- * @return The physical address corresponding to the virtual address, or NULL if the virtual address is
+ * @brief Returns to user mode using saved registers.
+ *
+ * Implemented in assembly.
+ *
+ * @param registers Register state.
  */
-void* task_virtual_to_physical(struct task* task, void* virtual_address);
+void task_return(struct registers* registers);
 
-#endif // TASK_H
+/**
+ * @brief Prepares user-mode segment registers.
+ *
+ * Implemented in assembly.
+ */
+void user_registers(void);
+
+/**
+ * @brief Returns the paging descriptor for a task.
+ *
+ * @param task Target task.
+ *
+ * @return Paging descriptor.
+ */
+struct paging_desc* task_get_paging_descriptor(
+    struct task* task
+);
+
+/**
+ * @brief Returns the current task paging descriptor.
+ *
+ * @return Current paging descriptor.
+ */
+struct paging_desc* task_current_paging_descriptor(void);
+
+/**
+ * @brief Copies a string from task memory.
+ *
+ * @param task Source task.
+ * @param dest Destination kernel buffer.
+ * @param src Source user pointer.
+ * @param max_len Maximum string length.
+ *
+ * @return STATUS_OK on success.
+ */
+status_t copy_string_from_task(
+    struct task* task,
+    void* dest,
+    const char* src,
+    int max_len
+);
+
+/**
+ * @brief Returns a stack item from a task.
+ *
+ * @param task Target task.
+ * @param index Stack index.
+ *
+ * @return Pointer-sized stack value.
+ */
+void* task_get_stack_item(
+    struct task* task,
+    int index
+);
+
+/**
+ * @brief Converts a task virtual address to a physical address.
+ *
+ * @param task Target task.
+ * @param virtual_address Virtual address.
+ *
+ * @return Physical address or NULL.
+ */
+void* task_virtual_to_physical(
+    struct task* task,
+    void* virtual_address
+);
+
+#endif /* TASK_H */

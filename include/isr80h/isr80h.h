@@ -1,6 +1,18 @@
 #ifndef ISR80H_H
 #define ISR80H_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file isr80h.h
+ * @brief ISR 0x80 system call dispatcher interface.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 enum SYSTEM_COMMANDS
 {
     SYSTEM_COMMAND0_PRINT,

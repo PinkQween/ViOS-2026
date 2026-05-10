@@ -1,9 +1,17 @@
-/**
- * @file elf.h
- * @brief Full ELF32/ELF64 definitions and structures.
- */
 #ifndef ELF_H
 #define ELF_H
+
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file elf.h
+ * @brief ELF32/ELF64 executable format definitions.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
 
 #include "stdint.h"
 #include "stddef.h"
@@ -325,22 +333,114 @@ struct elf64_dyn {
 |--------------------------------------------------------------------------
 */
 
+/**
+ * Check whether an ELF header has a valid ELF magic value.
+ *
+ * @param elf_header Pointer to an ELF header.
+ * @return true if the header starts with the ELF magic bytes.
+ */
 bool elf_is_valid(void* elf_header);
+
+/**
+ * Check whether an ELF header describes a 32-bit object.
+ *
+ * @param elf_header Pointer to an ELF header.
+ * @return true if the object class is ELFCLASS32.
+ */
 bool elf_is_32bit(void* elf_header);
+
+/**
+ * Check whether an ELF header describes a 64-bit object.
+ *
+ * @param elf_header Pointer to an ELF header.
+ * @return true if the object class is ELFCLASS64.
+ */
 bool elf_is_64bit(void* elf_header);
 
+/**
+ * Get the 32-bit ELF entry point as a pointer.
+ *
+ * @param header ELF32 header.
+ * @return Entry point address as a pointer.
+ */
 void* elf32_get_entry_ptr(struct elf32_header* header);
+
+/**
+ * Get the 64-bit ELF entry point as a pointer.
+ *
+ * @param header ELF64 header.
+ * @return Entry point address as a pointer.
+ */
 void* elf64_get_entry_ptr(struct elf64_header* header);
+
+/**
+ * Get the raw 32-bit ELF entry point address.
+ *
+ * @param header ELF32 header.
+ * @return Entry point virtual address.
+ */
 elf32_addr elf32_get_entry(struct elf32_header* header);
+
+/**
+ * Get the raw 64-bit ELF entry point address.
+ *
+ * @param header ELF64 header.
+ * @return Entry point virtual address.
+ */
 elf64_addr elf64_get_entry(struct elf64_header* header);
 
+/**
+ * Get an ELF32 program header by index.
+ *
+ * @param header ELF32 header.
+ * @param index Program header index.
+ * @return Pointer to the requested program header.
+ */
 struct elf32_phdr* elf32_get_phdr(struct elf32_header* header, uint16_t index);
+
+/**
+ * Get an ELF64 program header by index.
+ *
+ * @param header ELF64 header.
+ * @param index Program header index.
+ * @return Pointer to the requested program header.
+ */
 struct elf64_phdr* elf64_get_phdr(struct elf64_header* header, uint16_t index);
 
+/**
+ * Get an ELF32 section header by index.
+ *
+ * @param header ELF32 header.
+ * @param index Section header index.
+ * @return Pointer to the requested section header.
+ */
 struct elf32_shdr* elf32_get_shdr(struct elf32_header* header, uint16_t index);
+
+/**
+ * Get an ELF64 section header by index.
+ *
+ * @param header ELF64 header.
+ * @param index Section header index.
+ * @return Pointer to the requested section header.
+ */
 struct elf64_shdr* elf64_get_shdr(struct elf64_header* header, uint16_t index);
 
+/**
+ * Get the ELF32 dynamic table from a PT_DYNAMIC program header.
+ *
+ * @param header ELF32 header.
+ * @param phdr Dynamic program header.
+ * @return Pointer to the dynamic table.
+ */
 struct elf32_dyn* elf32_get_dynamic(struct elf32_header* header, struct elf32_phdr* phdr);
+
+/**
+ * Get the ELF64 dynamic table from a PT_DYNAMIC program header.
+ *
+ * @param header ELF64 header.
+ * @param phdr Dynamic program header.
+ * @return Pointer to the dynamic table.
+ */
 struct elf64_dyn* elf64_get_dynamic(struct elf64_header* header, struct elf64_phdr* phdr);
 
 #endif /* ELF_H */

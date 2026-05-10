@@ -1,6 +1,18 @@
 #ifndef ERRNO_H
 #define ERRNO_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file errno.h
+ * @brief User-space errno definitions for ViOS programs.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 #define	EPERM 1		/* Not super-user */
 #define	ENOENT 2	/* No such file or directory */
 #define	ESRCH 3		/* No such process */

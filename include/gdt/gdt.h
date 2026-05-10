@@ -1,31 +1,19 @@
 #ifndef GDT_H
 #define GDT_H
 
-#include "stdint.h"
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
 
 /**
  * @file gdt.h
- * @brief Global Descriptor Table (GDT) definitions and functions.
- *
- * This header defines the structures and functions for managing the
- * Global Descriptor Table (GDT) in an x86_64 operating system kernel.
- *
- * The GDT is a critical data structure used by the CPU to define the
- * characteristics of memory segments, including their base address,
- * limit, access rights, and other attributes. It is essential for
- * setting up protected mode and long mode operation.
- *
- * This implementation provides basic support for:
- * - Code and data segments
- * - Task State Segment (TSS) descriptors
- *
- * Note: This GDT implementation is simplified and may not cover all
- * possible segment types or features. It is intended for educational
- * purposes and may need to be extended for a full-featured kernel.
+ * @brief Global Descriptor Table (GDT) definitions and setup API.
  *
  * @author Hanna Skairipa
  * @date 2026-05-09
  */
+
+#include "stdint.h"
 
 struct gdt_entry
 {
@@ -55,8 +43,36 @@ struct gdt_ptr
     uint64_t base;
 } __attribute__((packed));
 
+/**
+ * Populate a standard GDT segment descriptor.
+ *
+ * @param gdt_entry Descriptor to write.
+ * @param address Segment base address.
+ * @param limit Segment limit.
+ * @param access_byte Access/type flags.
+ * @param flags Granularity and size flags.
+ * @return None.
+ */
 void gdt_set(struct gdt_entry* gdt_entry, void* address, uint32_t limit, uint8_t access_byte, uint8_t flags);
+
+/**
+ * Populate a 64-bit Task State Segment descriptor.
+ *
+ * @param desc Descriptor to write.
+ * @param tss_addr TSS base address.
+ * @param limit TSS limit.
+ * @param access_byte Access/type flags.
+ * @param flags Granularity and size flags.
+ * @return None.
+ */
 void gdt_set_tss(struct tss_desc_64* desc, void* tss_addr, uint32_t limit, uint8_t access_byte, uint8_t flags);
+
+/**
+ * Load the Global Descriptor Table register.
+ *
+ * @param gdt Pointer/limit pair describing the GDT.
+ * @return None.
+ */
 void gdt_load(struct gdt_ptr* gdt);
 
 #endif /* GDT_H */

@@ -1,6 +1,18 @@
 #ifndef DISK_H
 #define DISK_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file disk.h
+ * @brief Kernel disk device abstraction.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 #include "status.h"
 #include "fs/file.h"
 

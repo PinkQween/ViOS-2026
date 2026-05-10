@@ -1,170 +1,397 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
-#include "task.h"
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file process.h
+ * @brief Kernel process structures and process management API.
+ *
+ * Handles process loading, virtual memory tracking,
+ * task ownership, argument passing, and process cleanup.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+
 #include "config.h"
 #include "status.h"
+#include "task/task.h"
+#include "memory/paging/paging.h"
 #include "loader/elf/elfloader.h"
 #include "keyboard/keyboard.h"
 #include "fs/file.h"
 
-#include "stdint.h"
-#include "stddef.h"
-
-#define PROCESS_TYPE_ELF    0
-#define PROCESS_TYPE_BINARY 1
-
-typedef unsigned char PROCESS_FILE_TYPE;
-
-struct process_allocations
+/**
+ * @brief Supported process executable types.
+ */
+enum
 {
-    void* ptr;
+    PROCESS_TYPE_ELF = 0,
+    PROCESS_TYPE_BINARY = 1
+};
+
+typedef uint8_t PROCESS_FILE_TYPE;
+
+/**
+ * @brief Represents a tracked process allocation.
+ */
+struct process_allocation
+{
+    /**
+     * @brief User-space virtual address.
+     */
+    void* user_ptr;
+
+    /**
+     * @brief Kernel/physical allocation backing memory.
+     */
+    void* kernel_ptr;
+
+    /**
+     * @brief Allocation size in bytes.
+     */
     size_t size;
 };
 
+/**
+ * @brief Parsed command-line argument node.
+ */
 struct command_argument
 {
     char argument[4096];
     struct command_argument* next;
 };
 
+/**
+ * @brief Process argument storage.
+ */
 struct process_arguments
 {
     char** argv;
     int argc;
 };
 
+/**
+ * @brief Per-process keyboard input buffer.
+ */
 struct keyboard_buffer
 {
     char buffer[KEYBOARD_BUFFER_SIZE];
-    int tail;
     int head;
+    int tail;
 };
 
+/**
+ * @brief Represents a loaded user-space process.
+ */
 struct process
 {
-    uint32_t pid;                        // Process ID
-    char filename[MAX_PATH];       // Executable filename
-    struct task* main_thread;            // Main task/thread of the process
-    struct process_allocations allocations[MAX_PROGRAM_ALLOCATIONS]; // Dynamic allocations tracked by the process
-    PROCESS_FILE_TYPE filetype;          // Type of process: ELF or Binary
+    /**
+     * @brief Process identifier.
+     */
+    uint32_t pid;
 
+    /**
+     * @brief Executable filename.
+     */
+    char filename[MAX_PATH];
+
+    /**
+     * @brief Process paging descriptor.
+     */
+    struct paging_desc* paging_desc;
+
+    /**
+    * @brief Main thread of execution for this process.
+    */
+    struct task* main_thread;
+
+    /**
+     * @brief Tracked allocations owned by this process.
+     */
+    struct process_allocation allocations[MAX_PROGRAM_ALLOCATIONS];
+
+    /**
+     * @brief Executable type.
+     */
+    PROCESS_FILE_TYPE filetype;
+
+    /**
+     * @brief Executable program data.
+     */
     union
     {
-        void* ptr;                       // Raw binary pointer
-        struct elf_file* elf;            // ELF file pointer
+        /**
+         * @brief Raw binary pointer.
+         */
+        void* ptr;
+
+        /**
+         * @brief ELF file structure.
+         */
+        struct elf_file* elf;
     };
 
-    void* stack;                          // User-space stack pointer
-    uint32_t size;                        // Size of the loaded binary
-    struct keyboard_buffer keyboard;      // Keyboard input buffer
-    struct process_arguments arguments;   // Command-line arguments
+    /**
+     * @brief User-space stack allocation.
+     */
+    void* stack;
+
+    /**
+     * @brief Loaded executable size.
+     */
+    size_t size;
+
+    /**
+     * @brief Keyboard buffer for stdin handling.
+     */
+    struct keyboard_buffer keyboard;
+
+    /**
+     * @brief Process command-line arguments.
+     */
+    struct process_arguments arguments;
 };
 
-/*-----------------------------------------------------------------------------
-| Process Management
------------------------------------------------------------------------------*/
-
 /**
- * Loads a user-space process from a specified filename and creates a new process structure.
- * Allocates a task for the process but does not switch to it.
- *
- * @param filename The path to the binary or ELF file.
- * @param process Out parameter for the newly created process pointer.
- * @return STATUS_OK on success, or an error code on failure.
+ * @brief Currently active process.
  */
-status_t process_load(const char* filename, struct process** process);
+extern struct process* current_process;
 
 /**
- * Loads a process into a specific process slot.
- *
- * @param filename The path to the binary or ELF file.
- * @param process Out parameter for the newly created process pointer.
- * @param process_slot Slot index (PID) to load the process into.
- * @return STATUS_OK on success, or an error code on failure.
+ * @brief Global process table.
  */
-status_t process_load_for_slot(const char* filename, struct process** process, int process_slot);
+extern struct process* processes[MAX_PROCESSES];
+
+/* -------------------------------------------------------------------------- */
+/* Process Management                                                         */
+/* -------------------------------------------------------------------------- */
 
 /**
- * Returns the currently running process.
+ * @brief Returns the currently running process.
  *
- * @return Pointer to the current process.
+ * @return Current process or NULL.
  */
-struct process* process_current();
+struct process* process_current(void);
 
 /**
- * Returns a process by its PID.
+ * @brief Retrieves a process by PID.
  *
- * @param pid The process ID to retrieve.
- * @return Pointer to the process, or NULL if not found.
+ * @param pid Process identifier.
+ *
+ * @return Process pointer or NULL.
  */
 struct process* process_get(int pid);
 
 /**
- * Switches the CPU execution to the given process.
+ * @brief Returns a free process slot.
  *
- * @param process Process to switch to.
- * @return STATUS_OK on success, or an error code on failure.
+ * @return Slot index or STATUS_ERR(EBUSY).
+ */
+status_t process_get_free_slot(void);
+
+/**
+ * @brief Loads a process executable.
+ *
+ * @param filename Executable path.
+ * @param process_out Loaded process output.
+ *
+ * @return STATUS_OK on success.
+ */
+status_t process_load(
+    const char* filename,
+    struct process** process_out
+);
+
+/**
+ * @brief Loads a process into a specific slot.
+ *
+ * @param filename Executable path.
+ * @param process_out Loaded process output.
+ * @param process_slot Target process slot.
+ *
+ * @return STATUS_OK on success.
+ */
+status_t process_load_for_slot(
+    const char* filename,
+    struct process** process_out,
+    int process_slot
+);
+
+/**
+ * @brief Loads and switches to a process.
+ *
+ * @param filename Executable path.
+ * @param process_out Loaded process output.
+ *
+ * @return STATUS_OK on success.
+ */
+status_t process_load_switch(
+    const char* filename,
+    struct process** process_out
+);
+
+/**
+ * @brief Switches execution to a process.
+ *
+ * @param process Target process.
+ *
+ * @return STATUS_OK on success.
  */
 status_t process_switch(struct process* process);
 
 /**
- * Loads a process from a file and immediately switches execution to it.
+ * @brief Terminates a process and frees resources.
  *
- * @param filename Path to the process file.
- * @param process Out parameter for the process pointer.
- * @return STATUS_OK on success, or an error code on failure.
- */
-status_t process_load_switch(const char* filename, struct process** process);
-
-/**
- * Returns the first available process slot (PID) or an error if all slots are occupied.
+ * @param process Process to terminate.
  *
- * @return PID index on success, STATUS_ERR(EBUSY) if no slots are free.
- */
-status_t process_get_free_slot();
-
-/**
- * Allocates memory for a process and tracks the allocation for cleanup on process termination.
- * 
- * @param process The process to allocate memory for.
- * @param size The size of the memory to allocate.
- * @return Pointer to the allocated memory, or NULL on failure.
- */
-void* process_malloc(struct process* process, size_t size);
-
-/**
- * Frees memory allocated for a process and removes it from the process's allocation tracking.
- * 
- * @param process The process that owns the memory allocation.
- * @param ptr The pointer to the memory to free.
- */
-void process_free(struct process* process, void* ptr);
-
-/**
- * Retrieves the command-line arguments for a process.
- *
- * @param process The process to retrieve arguments for.
- * @param argc Out parameter for the argument count.
- * @param argv Out parameter for the argument array.
- */
-void process_get_arguments(struct process* process, int* argc, char*** argv);
-
-/**
- * Copies a linked list of parsed command arguments into a process address space.
- *
- * @param process The process that will receive argv/argc.
- * @param root_arg First parsed command argument.
- * @return STATUS_OK on success, or an error code on failure.
- */
-status_t process_inject_arguments(struct process* process, struct command_argument* root_arg);
-
-/**
- * Terminates a process, freeing all associated resources and removing it from the process list.
- * 
- * @param process The process to terminate.
- * @return STATUS_OK on success, or an error code on failure.
+ * @return STATUS_OK on success.
  */
 status_t process_terminate(struct process* process);
 
-#endif // PROCESS_H
+/**
+ * @brief Switches to any available process.
+ */
+void process_switch_to_any(void);
+
+/* -------------------------------------------------------------------------- */
+/* Memory Management                                                          */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Maps process executable memory.
+ *
+ * @param process Target process.
+ *
+ * @return STATUS_OK on success.
+ */
+status_t process_map_memory(struct process* process);
+
+/**
+ * @brief Converts a process virtual address to physical.
+ *
+ * @param process Target process.
+ * @param virt_addr Virtual address.
+ *
+ * @return Physical address or NULL.
+ */
+void* process_virtual_address_to_physical(
+    struct process* process,
+    void* virt_addr
+);
+
+/**
+ * @brief Allocates memory owned by a process.
+ *
+ * @param process Target process.
+ * @param size Allocation size.
+ *
+ * @return User virtual pointer or NULL.
+ */
+void* process_malloc(
+    struct process* process,
+    size_t size
+);
+
+/**
+ * @brief Frees process-owned memory.
+ *
+ * @param process Target process.
+ * @param ptr User virtual pointer.
+ */
+void process_free(
+    struct process* process,
+    void* ptr
+);
+
+/**
+ * @brief Frees all tracked allocations.
+ *
+ * @param process Target process.
+ */
+void process_terminate_allocations(
+    struct process* process
+);
+
+/* -------------------------------------------------------------------------- */
+/* Program Data                                                               */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Frees loaded binary data.
+ *
+ * @param process Target process.
+ */
+void process_free_binary_data(
+    struct process* process
+);
+
+/**
+ * @brief Frees loaded ELF data.
+ *
+ * @param process Target process.
+ */
+void process_free_elf_data(
+    struct process* process
+);
+
+/**
+ * @brief Frees executable program data.
+ *
+ * @param process Target process.
+ *
+ * @return STATUS_OK on success.
+ */
+status_t process_free_program_data(
+    struct process* process
+);
+
+/* -------------------------------------------------------------------------- */
+/* Arguments                                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * @brief Retrieves process argc/argv.
+ *
+ * @param process Target process.
+ * @param argc Output argc.
+ * @param argv Output argv.
+ */
+void process_get_arguments(
+    struct process* process,
+    int* argc,
+    char*** argv
+);
+
+/**
+ * @brief Counts parsed command arguments.
+ *
+ * @param root_arg Argument list head.
+ *
+ * @return Number of arguments.
+ */
+int process_count_command_arguments(
+    struct command_argument* root_arg
+);
+
+/**
+ * @brief Injects arguments into process memory.
+ *
+ * @param process Target process.
+ * @param root_arg Argument list head.
+ *
+ * @return STATUS_OK on success.
+ */
+status_t process_inject_arguments(
+    struct process* process,
+    struct command_argument* root_arg
+);
+
+#endif /* PROCESS_H */

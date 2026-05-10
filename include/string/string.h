@@ -1,6 +1,18 @@
 #ifndef STRING_H
 #define STRING_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file string.h
+ * @brief Kernel string and byte memory utilities.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 #include "stddef.h"
 #include "stdbool.h"
 

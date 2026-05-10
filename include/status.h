@@ -1,6 +1,18 @@
 #ifndef STATUS_H
 #define STATUS_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file status.h
+ * @brief Kernel status and errno-style result codes.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 #include "stdint.h"
 
 /**

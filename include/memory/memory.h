@@ -1,24 +1,21 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
-#include "stddef.h"
-#include "stdbool.h"
-#include "stdint.h"
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
 
 /**
  * @file memory.h
- * @brief Memory management utilities and structures.
- * 
- * This header defines the core memory management functions and data structures
- * used throughout the kernel. It includes definitions for the E820 memory map,
- * as well as basic implementations of memory manipulation functions like memset,
- * memcpy, and memcmp. These functions are essential for managing memory in a low-level environment
- * where standard library functions are not available.
- * The E820 memory map is a standard format used by x86 BIOS to report the physical memory layout of the system, including which regions are usable, reserved, or occupied by hardware. The functions provided in this header allow the kernel to analyze the E820 memory map and perform basic memory operations necessary for tasks such as setting up paging, initializing the heap, and managing memory for processes.
- * 
+ * @brief Kernel memory map and memory utility functions.
+ *
  * @author Hanna Skairipa
  * @date 2026-05-09
  */
+
+#include "stddef.h"
+#include "stdbool.h"
+#include "stdint.h"
 
 struct e820_entry
 {
@@ -28,7 +25,22 @@ struct e820_entry
     uint32_t acpi_attrs;
 } __attribute__((packed));
 
+/**
+ * Find the largest usable E820 memory map entry.
+ *
+ * @param entries E820 memory map entries.
+ * @param total_entries Number of entries in the map.
+ * @return Pointer to the largest usable entry, or NULL if none exists.
+ */
 struct e820_entry* e820_largest_free_entry(struct e820_entry* entries, size_t total_entries);
+
+/**
+ * Count all bytes marked usable in an E820 memory map.
+ *
+ * @param entries E820 memory map entries.
+ * @param total_entries Number of entries in the map.
+ * @return Total usable memory in bytes.
+ */
 size_t e820_total_accessible_memory(struct e820_entry* entries, size_t total_entries);
 
 /**
@@ -86,5 +98,15 @@ size_t e820_total_entries();
  * @return Pointer to the e820 entry at the specified index, or NULL if index is out of bounds.
  */
 struct e820_entry* e820_get_entry(size_t index);
+
+/**
+ * Copy bytes from source to destination, handling overlapping regions safely.
+ *
+ * @param dest Destination memory region.
+ * @param src Source memory region.
+ * @param count Number of bytes to copy.
+ * @return Pointer to dest.
+ */
+void* memmove(void* dest, const void* src, size_t count);
 
 #endif /* MEMORY_H */

@@ -1,33 +1,22 @@
 #ifndef KHEAP_H
 #define KHEAP_H
 
-#include "status.h"
-
-#include "stdint.h"
-#include "stddef.h"
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
 
 /**
  * @file kheap.h
  * @brief Kernel heap allocator interface.
  *
- * This header defines the interface for the kernel heap allocator, which
- * provides dynamic memory management for the kernel. The kernel heap is
- * a critical component that allows the kernel to allocate and free memory
- * at runtime, enabling features such as dynamic data structures, buffers,
- * and more flexible memory usage.
- *
- * The kernel heap is typically implemented as a simple allocator that manages
- * a contiguous region of memory reserved for the kernel. It may use a variety
- * of allocation strategies (e.g., first-fit, best-fit) and may include features
- * such as coalescing free blocks and splitting larger blocks to satisfy smaller
- * allocation requests.
- *
- * This interface provides functions for initializing the kernel heap, allocating
- * and freeing memory, and retrieving a pointer to the global heap structure.
- *
  * @author Hanna Skairipa
  * @date 2026-05-09
  */
+
+#include "status.h"
+
+#include "stdint.h"
+#include "stddef.h"
 
 /**
  * Initialize the global kernel heap allocator.
@@ -36,37 +25,92 @@
  */
 void kheap_init();
 
+/**
+ * Allocate memory from the kernel heap.
+ *
+ * @param size Number of bytes to allocate.
+ * @return Pointer to allocated memory, or NULL on failure.
+ */
 void* kmalloc(size_t size);
 
 /**
- * Alllocate with defragmentation and paging support. This is a more expensive allocation function that may trigger defragmentation of the heap and/or paging in additional memory if necessary to satisfy the allocation request.
+ * Allocate memory through the paging-aware allocation path.
+ *
+ * The current backend falls back to normal multiheap allocation first. Future
+ * paging/defragmentation support belongs behind this interface.
  * 
  * @param size Number of bytes to allocate. 
- * @param out_ptr Output pointer for allocated memory. This is set to the allocated pointer on success, or left unchanged on failure.
- * @return STATUS_OK on success, negative status_t on failure (e.g. if the allocation fails).
+ * @return Pointer to allocated memory, or NULL on failure.
  */
 void* palloc(size_t size);
 
 /**
- * Allocate zero-initialized memory from the kernel heap. This is a convenience wrapper around kmalloc that also zeroes the allocated memory.
+ * Allocate zero-initialized memory from the kernel heap.
  * 
  * @param size Number of bytes to allocate.
- * @param out_ptr Output pointer for allocated and zero-initialized memory. This is set to the allocated pointer on success, or left unchanged on failure.
- * @return STATUS_OK on success
+ * @return Pointer to zero-initialized memory, or NULL on failure.
  */
 void* kzalloc(size_t size);
 
 /**
- * Allocate memory from the kernel heap with specific alignment requirements.
- * This is a more expensive allocation function that may trigger defragmentation of the heap and/or paging in additional memory if necessary to satisfy the allocation request with the specified alignment.
+ * Kernel-internal implementation for the paging-aware allocation path.
  * 
  * @param size Number of bytes to allocate.
- * @param alignment Alignment requirement for the allocated memory.
- * @param out_ptr Output pointer for allocated memory. This is set to the allocated pointer on success, or left unchanged on failure.
- * @return STATUS_OK on success, negative status_t on failure (e.g. if the allocation fails).
+ * @return Pointer to allocated memory, or NULL on failure.
  */
 void* kpalloc(size_t size);
 
+/**
+ * Reallocate memory from the kernel heap.
+ *
+ * @param ptr Pointer to the memory to reallocate.
+ * @param new_size New size for the memory.
+ * @return Pointer to the reallocated memory, or NULL on failure.
+ */
+void* krealloc(void* ptr, size_t new_size);
+
+/**
+ * Allocate zero-initialized memory through the paging-aware allocation path.
+ * 
+ * @param size Number of bytes to allocate.
+ * @return Pointer to zero-initialized memory, or NULL on failure.
+ */
+void* kpzalloc(size_t size);
+
+/**
+ * Get the total managed heap size in bytes.
+ *
+ * @return Total managed heap size in bytes.
+ */
+size_t kheap_total_size();
+
+/**
+ * Get the total used heap size in bytes.
+ *
+ * @return Total used heap size in bytes.
+ */
+size_t kheap_total_used();
+
+/**
+ * Get the total free heap size in bytes.
+ *
+ * @return Total free heap size in bytes.
+ */
+size_t kheap_total_free();
+
+/**
+ * Free memory returned by kmalloc, kzalloc, palloc, or kpalloc.
+ *
+ * @param ptr Pointer to free.
+ */
 void kfree(void* ptr);
+
+/**
+ * Perform post-paging initialization for the kernel heap.
+ * This is called after paging is enabled to set up any necessary state for the kernel heap to operate correctly in a paged environment, such as setting up paging heaps for each heap in the multiheap and mapping them to their corresponding virtual address ranges.
+ * 
+ * @return None.
+ */
+void kheap_post_paging();
 
 #endif /* KHEAP_H */

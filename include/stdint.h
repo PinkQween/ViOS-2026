@@ -1,6 +1,18 @@
 #ifndef STDINT_H
 #define STDINT_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file stdint.h
+ * @brief Freestanding fixed-width integer types.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 typedef signed char int8_t;
 typedef unsigned char uint8_t;
 

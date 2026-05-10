@@ -1,6 +1,18 @@
 #ifndef KEYBOARD_H
 #define KEYBOARD_H
 
+/*
+ * Copyright (c) 2026 Hanna Skairipa.
+ */
+
+/**
+ * @file keyboard.h
+ * @brief Kernel keyboard subsystem interface.
+ *
+ * @author Hanna Skairipa
+ * @date 2026-05-09
+ */
+
 #include "status.h"
 #include "stdbool.h"
 
