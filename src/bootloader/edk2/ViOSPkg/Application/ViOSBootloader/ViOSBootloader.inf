@@ -1,0 +1,22 @@
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = ViOSBootloader
+  FILE_GUID                      = 11223344-5566-7788-99aa-bbccddeeff00
+  MODULE_TYPE                    = UEFI_APPLICATION
+  UNI_FILE_NAME                  = ViOSBootloader.uni
+  ENTRY_POINT                    = UefiMain
+
+[Packages]
+  MdePkg/MdePkg.dec
+  ViOSPkg/ViOSPkg.dec
+
+[LibraryClasses]
+  UefiLib
+  UefiApplicationEntryPoint
+  UefiBootServicesTableLib
+  PrintLib
+  BaseMemoryLib
+  UefiRuntimeServicesTableLib
+
+[Sources]
+  ViOSBootloader.c

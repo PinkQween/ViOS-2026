@@ -74,8 +74,8 @@ struct command_argument
  */
 struct process_arguments
 {
-    char** argv;
     int argc;
+    char** argv;
 };
 
 /**

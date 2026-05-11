@@ -231,7 +231,7 @@ void kernel_main(void)
 
     kernel_print_banner();
 
-    print("Initializing GDT...\n");
+    boot_step("Initializing GDT");
     kernel_setup_gdt();
 
     boot_step("Initializing heap");
@@ -274,8 +274,9 @@ void kernel_main(void)
     idt_unmask_irq(0);
     idt_unmask_irq(1);
 
-    print_ok();
-    print("Starting task scheduler\n");
+    boot_step("Starting task scheduler\n");
+
+    terminal_clear_color_and_reset_cursor(choose_colour(WHITE, BLACK));
 
     task_run_root_task();
 

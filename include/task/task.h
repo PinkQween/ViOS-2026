@@ -229,6 +229,16 @@ status_t copy_string_from_task(
 );
 
 /**
+ * @brief Copies arbitrary bytes from a task's virtual address into kernel memory.
+ */
+status_t copy_from_task(
+    struct task* task,
+    void* dest,
+    const void* src,
+    size_t size
+);
+
+/**
  * @brief Returns a stack item from a task.
  *
  * @param task Target task.

@@ -307,6 +307,41 @@ status_t copy_string_from_task(struct task* task,
     return STATUS_OK;
 }
 
+status_t copy_from_task(struct task* task,
+                       void* dest,
+                       const void* src,
+                       size_t size)
+{
+    if (!task || !dest || !src)
+    {
+        return STATUS_ERR(EINVAL);
+    }
+
+    if (size == 0 || size >= PAGING_PAGE_SIZE)
+    {
+        return STATUS_ERR(EINVAL);
+    }
+
+    void* tmp = kzalloc(size);
+
+    if (!tmp)
+    {
+        return STATUS_ERR(ENOMEM);
+    }
+
+    task_page_task(task);
+
+    memcpy(tmp, src, size);
+
+    kernel_page();
+
+    memcpy(dest, tmp, size);
+
+    kfree(tmp);
+
+    return STATUS_OK;
+}
+
 void* task_get_stack_item(struct task* task, int index)
 {
     if (!task)

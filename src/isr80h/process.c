@@ -5,6 +5,7 @@
 #include "status.h"
 #include "string/string.h"
 #include "memory/paging/paging.h"
+#include "memory/heap/kheap.h"
 
 void* isr80h_command5_process_load_start(struct interrupt_frame* frame)
 {
@@ -60,6 +61,17 @@ void* isr80h_command5_process_load_start(struct interrupt_frame* frame)
         return (void*)(intptr_t)status;
     }
 
+    // Validate registers before return
+    struct registers* regs = &process->main_thread->registers;
+    if (regs->rsp < 0x3FB000 || regs->rsp > 0x3FF000)
+    {
+        print_w_color("[WARN] Invalid RSP before user return!\n", 0x0C);
+    }
+    if (regs->rip < 0x400000 || regs->rip > 0x500000)
+    {
+        print_w_color("[WARN] Suspicious RIP before user return!\n", 0x0C);
+    }
+
     task_return(&process->main_thread->registers);
 
     return process;
@@ -70,20 +82,75 @@ void* isr80h_command6_invoke_system_command(struct interrupt_frame* frame)
     (void)frame;
 
     struct task* current = task_current();
+    void* user_args_virt = task_get_stack_item(current, 0);
 
-    struct command_argument* args =
-        (struct command_argument*)
-        task_virtual_to_physical(
-            current,
-            task_get_stack_item(current, 0)
-        );
-
-    if (!args)
+    if (!user_args_virt)
     {
         return (void*)(intptr_t)STATUS_ERR(EINVAL);
     }
 
-    struct command_argument* root_arg = &args[0];
+    struct command_argument* user_node = (struct command_argument*)user_args_virt;
+
+    // Build a kernel-side copy of the argument linked list so we can safely
+    // access strings and next pointers while still running in the caller's
+    // address space.
+    struct command_argument* root_arg = NULL;
+    struct command_argument* tail = NULL;
+
+    while (user_node)
+    {
+        char tmp[4096];
+        status_t s = copy_string_from_task(current, tmp, (const char*)user_node, sizeof(tmp) - 1);
+        tmp[sizeof(tmp) - 1] = '\0';
+        if (status_is_error(s))
+        {
+            // Cleanup any allocated nodes
+            struct command_argument* p = root_arg;
+            while (p)
+            {
+                struct command_argument* n = p->next;
+                kfree(p);
+                p = n;
+            }
+            return (void*)(intptr_t)STATUS_ERR(EFAULT);
+        }
+
+        struct command_argument* knode = kzalloc(sizeof(struct command_argument));
+        if (!knode)
+        {
+            struct command_argument* p = root_arg;
+            while (p)
+            {
+                struct command_argument* n = p->next;
+                kfree(p);
+                p = n;
+            }
+            return (void*)(intptr_t)STATUS_ERR(ENOMEM);
+        }
+
+        strncpy(knode->argument, tmp, sizeof(knode->argument));
+        knode->next = NULL;
+
+        if (!root_arg)
+        {
+            root_arg = knode;
+            tail = knode;
+        }
+        else
+        {
+            tail->next = knode;
+            tail = knode;
+        }
+
+        void* next_ptr = NULL;
+        s = copy_from_task(current, &next_ptr, (void*)((uintptr_t)user_node + sizeof(knode->argument)), sizeof(void*));
+        if (status_is_error(s))
+        {
+            break;
+        }
+
+        user_node = (struct command_argument*)next_ptr;
+    }
 
     if (strlen(root_arg->argument) == 0)
     {
@@ -101,7 +168,7 @@ void* isr80h_command6_invoke_system_command(struct interrupt_frame* frame)
     struct process* process = NULL;
 
     status_t status =
-        process_load_switch(path, &process);
+        process_load(path, &process);
 
     if (status_is_error(status))
     {
@@ -120,12 +187,23 @@ void* isr80h_command6_invoke_system_command(struct interrupt_frame* frame)
         return (void*)(intptr_t)status;
     }
 
-    status = task_switch(process->main_thread);
+    status = process_switch(process);
 
     if (status_is_error(status))
     {
         process_terminate(process);
         return (void*)(intptr_t)status;
+    }
+
+    // Validate registers before return
+    struct registers* regs2 = &process->main_thread->registers;
+    if (regs2->rsp < 0x3FB000 || regs2->rsp > 0x3FF000)
+    {
+        print_w_color("[WARN] Invalid RSP before user return (cmd6)!\n", 0x0C);
+    }
+    if (regs2->rip < 0x400000 || regs2->rip > 0x500000)
+    {
+        print_w_color("[WARN] Suspicious RIP before user return (cmd6)!\n", 0x0C);
     }
 
     task_return(&process->main_thread->registers);

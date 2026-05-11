@@ -8,7 +8,7 @@ int main(int argc, char** argv)
         printf("Echo program!\n");
         printf("Arguments:\n");
         for (int i = 0; i < argc; i++) {
-            printf("\t%s\n", argv[i]);
+            printf("\t%d: %s\n", i, argv[i]);
         }
 
     return 0;

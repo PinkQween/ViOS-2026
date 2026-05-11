@@ -805,6 +805,14 @@ status_t process_inject_arguments(
 
     if (status_is_ok(res))
     {
+        struct command_argument* debug_arg = root_arg;
+        int debug_i = 0;
+        while (debug_arg && debug_i < 5)
+        {
+            debug_arg = debug_arg->next;
+            debug_i++;
+        }
+
         process->arguments.argc = argc;
         process->arguments.argv = (char**)argv_user;
     }
