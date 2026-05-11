@@ -301,6 +301,16 @@ void* process_malloc(
 );
 
 /**
+ * @brief Returns the kernel pointer for a process allocation.
+ *
+ * @param process Target process.
+ * @param user_ptr User virtual pointer.
+ *
+ * @return Kernel virtual pointer or NULL.
+ */
+void* process_malloc_get_kernel_ptr(struct process* process, void* user_ptr);
+
+/**
  * @brief Frees process-owned memory.
  *
  * @param process Target process.

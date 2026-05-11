@@ -6,6 +6,8 @@
 
 void* isr80h_command0_print(struct interrupt_frame* frame)
 {
+    print("[SYS0]\n");
+
     void* user_space_msg_buffer = task_get_stack_item(task_current(), 0);
     char buf[4096];
     if (status_is_error(copy_string_from_task(task_current(), buf, user_space_msg_buffer, sizeof(buf) - 1))) {

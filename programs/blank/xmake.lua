@@ -15,7 +15,7 @@ target("blank")
             "-nostdinc " ..
             "-nostdlib " ..
             "-fno-builtin " ..
-            "-m32 " ..
+            "-m64 " ..
             "-fno-pic " ..
             "-fno-pie " ..
             "-fno-stack-protector " ..
@@ -30,7 +30,7 @@ target("blank")
         )
 
         os.exec(
-            "ld -m elf_i386 " ..
+            "ld -m elf_x86_64 " ..
             "-T programs/blank/linker.ld " ..
             "-nostdlib " ..
             "-o assets/blank.elf " ..

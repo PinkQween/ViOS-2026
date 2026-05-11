@@ -117,7 +117,7 @@ static void kernel_setup_gdt(void)
     gdt_set(
         &gdt_real.kernel_code,
         0,
-        0,
+        0xFFFFF,
         0x9A,
         0x20
     );
@@ -125,7 +125,7 @@ static void kernel_setup_gdt(void)
     gdt_set(
         &gdt_real.kernel_data,
         0,
-        0,
+        0xFFFFF,
         0x92,
         0x00
     );
@@ -135,7 +135,7 @@ static void kernel_setup_gdt(void)
         0,
         0xFFFFF,
         0xF2,
-        0xC0
+        0x00
     );
 
     gdt_set(
@@ -143,7 +143,7 @@ static void kernel_setup_gdt(void)
         0,
         0xFFFFF,
         0xFA,
-        0xC0
+        0x20
     );
 
     gdt_set_tss(
@@ -264,15 +264,15 @@ void kernel_main(void)
         keyboard_init()
     );
 
-    boot_step("Enabling hardware IRQs");
-    idt_unmask_irq(0);
-    idt_unmask_irq(1);
-
     boot_step("Initializing TSS");
     kernel_setup_tss();
 
     boot_step("Loading init process");
     kernel_load_init_process();
+
+    boot_step("Enabling hardware IRQs");
+    idt_unmask_irq(0);
+    idt_unmask_irq(1);
 
     print_ok();
     print("Starting task scheduler\n");

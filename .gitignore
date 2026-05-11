@@ -9,3 +9,4 @@ bin/
 # IDE/editor metadata
 .vscode/
 
+ref/

@@ -15,7 +15,7 @@ target("echo")
             "-nostdinc " ..
             "-nostdlib " ..
             "-fno-builtin " ..
-            "-m32 " ..
+            "-m64 " ..
             "-fno-pic " ..
             "-fno-pie " ..
             "-fno-stack-protector " ..
@@ -30,7 +30,7 @@ target("echo")
         )
 
         os.exec(
-            "ld -m elf_i386 " ..
+            "ld -m elf_x86_64 " ..
             "-T programs/echo/linker.ld " ..
             "-nostdlib " ..
             "-o assets/echo.elf " ..

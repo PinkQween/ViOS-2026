@@ -88,7 +88,7 @@ static status_t process_load_binary(
 
     size_t aligned_size = heap_align_value_to_upper((size_t)stat.size);
 
-    void* program_data = kzalloc(aligned_size);
+    void* program_data = kpzalloc(aligned_size);
 
     if (!program_data)
     {
@@ -167,11 +167,13 @@ static status_t process_load_data(
 
 static status_t process_map_binary(struct process* process)
 {
+    void* phys_end = paging_align_address((void*)((uintptr_t)process->ptr + (uintptr_t)process->size));
+
     return paging_map_to(
         process->paging_desc,
         (void*)PROGRAM_VIRTUAL_ADDRESS,
         process->ptr,
-        paging_align_address((void*)process->size),
+        phys_end,
         PAGING_IS_WRITEABLE |
         PAGING_IS_PRESENT |
         PAGING_ACCESSIBLE_FROM_ALL
@@ -197,11 +199,21 @@ static status_t process_map_elf_file(
             flags |= PAGING_IS_WRITEABLE;
         }
 
+        void* phys_start = paging_align_to_lower_page(seg->paddr);
+        void* phys_end = paging_align_address((void*)((uintptr_t)seg->paddr + (uintptr_t)seg->memsz));
+        void* virt_start = paging_align_to_lower_page(seg->vaddr);
+
+        if (!seg->paddr)
+        {
+            print("ERROR: Segment has NULL paddr!\n");
+            return STATUS_ERR(EINVAL);
+        }
+
         status_t res = paging_map_to(
             process->paging_desc,
-            paging_align_to_lower_page(seg->vaddr),
-            seg->paddr,
-            paging_align_address((void*)seg->memsz),
+            virt_start,
+            phys_start,
+            phys_end,
             flags
         );
 
@@ -285,9 +297,7 @@ status_t process_map_memory(struct process* process)
         process->paging_desc,
         (void*)PROGRAM_VIRTUAL_STACK_ADDRESS_END,
         process->stack,
-        paging_align_address(
-            (void*)USER_PROGRAM_STACK_SIZE
-        ),
+        paging_align_address((void*)((uintptr_t)process->stack + (uintptr_t)USER_PROGRAM_STACK_SIZE)),
         PAGING_IS_WRITEABLE |
         PAGING_IS_PRESENT |
         PAGING_ACCESSIBLE_FROM_ALL
@@ -343,7 +353,7 @@ status_t process_load_for_slot(
     }
 
     new_process->stack =
-        kzalloc(USER_PROGRAM_STACK_SIZE);
+        kpzalloc(USER_PROGRAM_STACK_SIZE);
 
     if (!new_process->stack)
     {
@@ -390,6 +400,28 @@ status_t process_load_for_slot(
             (uint64_t)elf_entry_point(
                 new_process->elf
             );
+    }
+
+    // Initialize default arguments (program name only)
+    void* argv_user = process_malloc(new_process, sizeof(char*) * 2);
+    if (argv_user)
+    {
+        char** argv_kernel = (char**)process_malloc_get_kernel_ptr(new_process, argv_user);
+        size_t name_len = strlen(filename) + 1;
+        void* arg0_user = process_malloc(new_process, name_len);
+        if (arg0_user)
+        {
+            char* arg0_kernel = (char*)process_malloc_get_kernel_ptr(new_process, arg0_user);
+            strncpy(arg0_kernel, filename, name_len);
+            argv_kernel[0] = (char*)arg0_user;
+            argv_kernel[1] = NULL;
+            new_process->arguments.argc = 1;
+            new_process->arguments.argv = (char**)argv_user;
+        }
+        else
+        {
+            process_free(new_process, argv_user);
+        }
     }
 
     *process_out = new_process;
@@ -500,7 +532,7 @@ void* process_malloc(
         process->paging_desc,
         user_vaddr,
         kernel_ptr,
-        paging_align_address((void*)size),
+            paging_align_address((void*)((uintptr_t)kernel_ptr + (uintptr_t)size)),
         PAGING_IS_WRITEABLE |
         PAGING_IS_PRESENT |
         PAGING_ACCESSIBLE_FROM_ALL
@@ -522,6 +554,19 @@ void* process_malloc(
         size;
 
     return user_vaddr;
+}
+
+void* process_malloc_get_kernel_ptr(struct process* process, void* user_ptr)
+{
+    for (int i = 0; i < MAX_PROGRAM_ALLOCATIONS; i++)
+    {
+        if (process->allocations[i].user_ptr == user_ptr)
+        {
+            return process->allocations[i].kernel_ptr;
+        }
+    }
+
+    return NULL;
 }
 
 static void process_allocation_unjoin(
@@ -712,15 +757,17 @@ status_t process_inject_arguments(
         return STATUS_ERR(EINVAL);
     }
 
-    char** argv = process_malloc(
+    void* argv_user = process_malloc(
         process,
         sizeof(char*) * (argc + 1)
     );
 
-    if (!argv)
+    if (!argv_user)
     {
         return STATUS_ERR(ENOMEM);
     }
+
+    char** argv_kernel = (char**)process_malloc_get_kernel_ptr(process, argv_user);
 
     struct command_argument* current =
         root_arg;
@@ -732,41 +779,43 @@ status_t process_inject_arguments(
         size_t len =
             strlen(current->argument) + 1;
 
-        char* argument_string =
+        void* argument_string_user =
             process_malloc(process, len);
 
-        if (!argument_string)
+        if (!argument_string_user)
         {
             res = STATUS_ERR(ENOMEM);
             break;
         }
 
+        char* argument_string_kernel = (char*)process_malloc_get_kernel_ptr(process, argument_string_user);
+
         strncpy(
-            argument_string,
+            argument_string_kernel,
             current->argument,
             len
         );
 
-        argv[index++] = argument_string;
+        argv_kernel[index++] = (char*)argument_string_user;
 
         current = current->next;
     }
 
-    argv[index] = NULL;
+    argv_kernel[index] = NULL;
 
     if (status_is_ok(res))
     {
         process->arguments.argc = argc;
-        process->arguments.argv = argv;
+        process->arguments.argv = (char**)argv_user;
     }
     else
     {
         for (int i = 0; i < index; i++)
         {
-            process_free(process, argv[i]);
+            process_free(process, argv_kernel[i]);
         }
 
-        process_free(process, argv);
+        process_free(process, argv_user);
     }
 
     return res;
@@ -813,7 +862,7 @@ void process_free(
         alloc->user_ptr,
         alloc->kernel_ptr,
         paging_align_address(
-            (void*)alloc->size
+            (void*)((uintptr_t)alloc->kernel_ptr + alloc->size)
         ),
         0
     );

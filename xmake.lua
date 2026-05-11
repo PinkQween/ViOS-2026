@@ -95,8 +95,6 @@ if is_macos then
             os.exec(cmd)
         end)
     task_end()
-else
-    print("ℹ Linux detected: building locally, skipping Docker tasks.")
 end
 
 -- =========================================================

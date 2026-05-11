@@ -92,6 +92,63 @@ static status_t elf_validate32(struct elf32_header* header, uint32_t file_size)
     return entry_in_load_segment ? STATUS_OK : STATUS_ERR(EINVAL);
 }
 
+static status_t elf_validate64(struct elf64_header* header, uint32_t file_size)
+{
+    if (!header || file_size < sizeof(struct elf64_header)) {
+        return STATUS_ERR(EINVAL);
+    }
+
+    if (!elf_is_valid(header) ||
+        header->e_ident[EI_CLASS] != ELFCLASS64 ||
+        header->e_ident[EI_DATA] != ELFDATA2LSB ||
+        header->e_ident[EI_VERSION] != EV_CURRENT ||
+        header->e_type != ET_EXEC ||
+        header->e_machine != 0x3E ||  // EM_X86_64
+        header->e_version != EV_CURRENT ||
+        header->e_ehsize != sizeof(struct elf64_header) ||
+        header->e_phentsize != sizeof(struct elf64_phdr)) {
+        return STATUS_ERR(EINVAL);
+    }
+
+    if (header->e_phnum == 0 ||
+        header->e_phnum > ELF_MAX_SEGMENTS ||
+        !elf_range_in_file(header->e_phoff, header->e_phnum * header->e_phentsize, file_size)) {
+        return STATUS_ERR(EINVAL);
+    }
+
+    if (header->e_shoff != 0) {
+        if (header->e_shentsize != sizeof(struct elf64_shdr) ||
+            !elf_range_in_file(header->e_shoff, header->e_shnum * header->e_shentsize, file_size)) {
+            return STATUS_ERR(EINVAL);
+        }
+    }
+
+    bool entry_in_load_segment = false;
+    for (int i = 0; i < header->e_phnum; i++) {
+        struct elf64_phdr* phdr = (struct elf64_phdr*)((uintptr_t)header + header->e_phoff + i * header->e_phentsize);
+
+        if (phdr->p_filesz > phdr->p_memsz) {
+            return STATUS_ERR(EINVAL);
+        }
+
+        if (phdr->p_filesz && !elf_range_in_file(phdr->p_offset, phdr->p_filesz, file_size)) {
+            return STATUS_ERR(EINVAL);
+        }
+
+        if (phdr->p_memsz > phdr->p_filesz + ELF_SEGMENT_BSS_SLACK) {
+            return STATUS_ERR(EINVAL);
+        }
+
+        if (phdr->p_type == PT_LOAD &&
+            header->e_entry >= phdr->p_vaddr &&
+            header->e_entry < phdr->p_vaddr + phdr->p_memsz) {
+            entry_in_load_segment = true;
+        }
+    }
+
+    return entry_in_load_segment ? STATUS_OK : STATUS_ERR(EINVAL);
+}
+
 static void* elf_vaddr_to_file_ptr(struct elf_file* file, uintptr_t vaddr, size_t size)
 {
     for (int i = 0; i < file->segment_count; i++) {
@@ -168,6 +225,42 @@ static status_t elf_process_phdr32(struct elf_file* file, struct elf32_header* h
 }
 
 /**
+ * @brief Parses 64-bit program headers to identify segments.
+ */
+static status_t elf_process_phdr64(struct elf_file* file, struct elf64_header* header) {
+    // First pass: find base address
+    for (int i = 0; i < header->e_phnum; i++) {
+        struct elf64_phdr* phdr = elf64_get_phdr(header, i);
+        if (phdr->p_type == PT_LOAD) {
+            if (!file->base_address) {
+                file->base_address = (void*)(uintptr_t)phdr->p_vaddr;
+            }
+        }
+    }
+    
+    // Second pass: process segments
+    for (int i = 0; i < header->e_phnum; i++) {
+        struct elf64_phdr* phdr = elf64_get_phdr(header, i);
+        if (phdr->p_type == PT_LOAD) {
+            if (file->segment_count >= ELF_MAX_SEGMENTS) return STATUS_ERR(ENOMEM);
+            struct elf_segment* seg = &file->segments[file->segment_count++];
+            seg->vaddr = (void*)(uintptr_t)phdr->p_vaddr;
+            seg->filesz = phdr->p_filesz;
+            seg->memsz = phdr->p_memsz;
+            seg->flags = phdr->p_flags;
+            
+            // For BSS segments (filesz == 0), allocate zero-filled memory
+            if (phdr->p_filesz == 0) {
+                seg->paddr = kpzalloc(phdr->p_memsz);
+            } else {
+                seg->paddr = elf_file_ptr(file, phdr->p_offset, phdr->p_filesz);
+            }
+        }
+    }
+    return STATUS_OK;
+}
+
+/**
  * @brief Loads an ELF file from disk into memory.
  */
 status_t elf_load(const char* filename, struct elf_file** file_out) {
@@ -186,7 +279,7 @@ status_t elf_load(const char* filename, struct elf_file** file_out) {
     }
 
     // Allocate slightly more for potential unaligned access or stubs
-    void* elf_memory = kzalloc(stat.size + 4096);
+    void* elf_memory = kpzalloc(stat.size + 4096);
     if (!elf_memory) {
         fclose(fd);
         return STATUS_ERR(ENOMEM);
@@ -199,7 +292,17 @@ status_t elf_load(const char* filename, struct elf_file** file_out) {
     }
     fclose(fd);
 
-    status_t res = elf_validate32((struct elf32_header*)elf_memory, stat.size);
+    // Validate based on class
+    status_t res;
+    if (elf_is_32bit(elf_memory)) {
+        res = elf_validate32((struct elf32_header*)elf_memory, stat.size);
+    } else if (elf_is_64bit(elf_memory)) {
+        res = elf_validate64((struct elf64_header*)elf_memory, stat.size);
+    } else {
+        kfree(elf_memory);
+        return STATUS_ERR(EINVAL);
+    }
+
     if (status_is_error(res)) {
         kfree(elf_memory);
         return res;
@@ -218,13 +321,17 @@ status_t elf_load(const char* filename, struct elf_file** file_out) {
     if (elf_is_32bit(elf_memory)) {
         file->elf_class = ELFCLASS32;
         res = elf_process_phdr32(file, (struct elf32_header*)elf_memory);
-        if (status_is_error(res)) {
-            elf_file_free(file);
-            return res;
-        }
+    } else if (elf_is_64bit(elf_memory)) {
+        file->elf_class = ELFCLASS64;
+        res = elf_process_phdr64(file, (struct elf64_header*)elf_memory);
     } else {
         elf_file_free(file);
         return STATUS_ERR(EINVAL);
+    }
+
+    if (status_is_error(res)) {
+        elf_file_free(file);
+        return res;
     }
 
     *file_out = file;

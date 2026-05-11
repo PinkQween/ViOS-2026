@@ -1,4 +1,5 @@
 #include "isr80h/process.h"
+#include "console/console.h"
 #include "task/task.h"
 #include "task/process.h"
 #include "status.h"
@@ -137,25 +138,28 @@ void* isr80h_command7_get_process_arguments(struct interrupt_frame* frame)
     (void)frame;
 
     struct task* current = task_current();
-
     struct process* process = current->process;
+
+    void* user_args_virt = task_get_stack_item(current, 0);
+    
+    if (!user_args_virt)
+    {
+        return (void*)(intptr_t)STATUS_ERR(EINVAL);
+    }
 
     struct process_arguments* user_args =
         (struct process_arguments*)
-        task_virtual_to_physical(
-            current,
-            task_get_stack_item(current, 0)
-        );
+        task_virtual_to_physical(current, user_args_virt);
 
     if (!user_args)
     {
-        return (void*)(intptr_t)STATUS_ERR(EINVAL);
+        return (void*)(intptr_t)STATUS_ERR(EFAULT);
     }
 
     user_args->argc = process->arguments.argc;
     user_args->argv = process->arguments.argv;
 
-    return NULL;
+    return (void*)(intptr_t)STATUS_OK;
 }
 
 void* isr80h_command8_exit(struct interrupt_frame* frame)

@@ -13,7 +13,7 @@ target("libvios")
             "-nostdinc " ..
             "-nostdlib " ..
             "-fno-builtin " ..
-            "-m32 " ..
+            "-m64 " ..
             "-fno-pic " ..
             "-fno-pie " ..
             "-fno-stack-protector " ..
@@ -22,13 +22,13 @@ target("libvios")
             "-Iprograms/stdlib/include "
 
         os.exec(
-            "nasm -f elf32 " ..
+            "nasm -f elf64 " ..
             "programs/stdlib/src/start.asm " ..
             "-o programs/stdlib/build/start.o"
         )
 
         os.exec(
-            "nasm -f elf32 " ..
+            "nasm -f elf64 " ..
             "programs/stdlib/src/vios.asm " ..
             "-o programs/stdlib/build/vios.asm.o"
         )
@@ -61,6 +61,16 @@ target("libvios")
             "gcc " .. cflags ..
             "programs/stdlib/src/string.c " ..
             "-o programs/stdlib/build/string.o"
+        )
+
+        os.exec(
+            "ar rcs assets/libvios.a " ..
+            "programs/stdlib/build/start.c.o " ..
+            "programs/stdlib/build/vios.asm.o " ..
+            "programs/stdlib/build/vios.o " ..
+            "programs/stdlib/build/stdlib.o " ..
+            "programs/stdlib/build/stdio.o " ..
+            "programs/stdlib/build/string.o"
         )
     end)
 target_end()

@@ -70,7 +70,7 @@ static bool paging_map_level_is_valid(
 
 static struct paging_pml_entries* paging_pml_entries_new()
 {
-    return kzalloc(sizeof(struct paging_pml_entries));
+    return kpzalloc(sizeof(struct paging_pml_entries));
 }
 
 static void paging_apply_flags(struct paging_desc_entry* entry, int flags)
@@ -431,12 +431,12 @@ int paging_map_to(
         !paging_is_aligned(phys) ||
         !paging_is_aligned(phys_end))
     {
-        return -1;
+        return STATUS_ERR(EINVAL);
     }
 
     if ((uintptr_t)phys_end < (uintptr_t)phys)
     {
-        return -1;
+        return STATUS_ERR(EINVAL);
     }
 
     uintptr_t total_bytes =
