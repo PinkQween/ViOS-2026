@@ -1,0 +1,17 @@
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/SetMem.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/ScanMem64Wrapper.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/ScanMem32Wrapper.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/ScanMem16Wrapper.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/ScanMem8Wrapper.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/ZeroMemWrapper.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/CompareMemWrapper.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/SetMemNWrapper.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/SetMem64Wrapper.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/SetMem32Wrapper.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/SetMem16Wrapper.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/SetMemWrapper.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/CopyMemWrapper.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/IsZeroBufferWrapper.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/MemLibGeneric.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/MemLibGuid.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseMemoryLib/BaseMemoryLib/OUTPUT/CopyMem.obj

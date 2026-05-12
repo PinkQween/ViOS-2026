@@ -1,0 +1,5 @@
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib/OUTPUT/DevicePathUtilities.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib/OUTPUT/DevicePathUtilitiesDxeSmm.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib/OUTPUT/DevicePathToText.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib/OUTPUT/DevicePathFromText.obj
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib/OUTPUT/UefiDevicePathLib.obj

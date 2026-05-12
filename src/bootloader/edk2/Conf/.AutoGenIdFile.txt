@@ -1,0 +1,3 @@
+Arch=X64
+BuildDir=/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC
+PlatformGuid=87654321-4321-4321-4321-210987654321

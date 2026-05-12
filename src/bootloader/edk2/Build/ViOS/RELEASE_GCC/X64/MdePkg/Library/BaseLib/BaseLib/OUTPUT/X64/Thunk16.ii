@@ -1,0 +1,3642 @@
+# 0 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/X64/Thunk16.nasm"
+# 0 "<built-in>"
+# 0 "<command-line>"
+# 1 "/usr/include/stdc-predef.h" 1 3
+# 0 "<command-line>" 2
+# 1 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseLib/BaseLib/DEBUG/AutoGen.h" 1
+# 16 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseLib/BaseLib/DEBUG/AutoGen.h"
+# 1 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Base.h" 1
+# 15 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Base.h"
+       
+
+
+
+
+# 1 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/X64/ProcessorBind.h" 1
+# 9 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/X64/ProcessorBind.h"
+       
+# 161 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/X64/ProcessorBind.h"
+typedef unsigned long long UINT64;
+
+
+
+typedef long long INT64;
+
+
+
+typedef unsigned int UINT32;
+
+
+
+typedef int INT32;
+
+
+
+typedef unsigned short UINT16;
+
+
+
+
+typedef unsigned short CHAR16;
+
+
+
+typedef short INT16;
+
+
+
+
+typedef unsigned char BOOLEAN;
+
+
+
+typedef unsigned char UINT8;
+
+
+
+typedef char CHAR8;
+
+
+
+typedef signed char INT8;
+
+
+
+
+
+
+typedef UINT64 UINTN;
+
+
+
+
+typedef INT64 INTN;
+# 21 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Base.h" 2
+# 212 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Base.h"
+typedef struct {
+  UINT32 Data1;
+  UINT16 Data2;
+  UINT16 Data3;
+  UINT8 Data4[8];
+} GUID;
+
+
+
+
+typedef struct {
+  UINT8 Addr[4];
+} IPv4_ADDRESS;
+
+
+
+
+typedef struct {
+  UINT8 Addr[16];
+} IPv6_ADDRESS;
+
+
+
+
+typedef UINT64 PHYSICAL_ADDRESS;
+
+
+
+
+typedef struct _LIST_ENTRY LIST_ENTRY;
+
+
+
+
+struct _LIST_ENTRY {
+  LIST_ENTRY *ForwardLink;
+  LIST_ENTRY *BackLink;
+};
+# 606 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Base.h"
+typedef __builtin_ms_va_list VA_LIST;
+# 710 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Base.h"
+typedef UINTN *BASE_LIST;
+# 815 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Base.h"
+_Static_assert (sizeof (BOOLEAN) == 1, "sizeof (BOOLEAN) does not meet UEFI Specification Data Type requirements");
+_Static_assert (sizeof (INT8) == 1, "sizeof (INT8) does not meet UEFI Specification Data Type requirements");
+_Static_assert (sizeof (UINT8) == 1, "sizeof (UINT8) does not meet UEFI Specification Data Type requirements");
+_Static_assert (sizeof (INT16) == 2, "sizeof (INT16) does not meet UEFI Specification Data Type requirements");
+_Static_assert (sizeof (UINT16) == 2, "sizeof (UINT16) does not meet UEFI Specification Data Type requirements");
+_Static_assert (sizeof (INT32) == 4, "sizeof (INT32) does not meet UEFI Specification Data Type requirements");
+_Static_assert (sizeof (UINT32) == 4, "sizeof (UINT32) does not meet UEFI Specification Data Type requirements");
+_Static_assert (sizeof (INT64) == 8, "sizeof (INT64) does not meet UEFI Specification Data Type requirements");
+_Static_assert (sizeof (UINT64) == 8, "sizeof (UINT64) does not meet UEFI Specification Data Type requirements");
+_Static_assert (sizeof (CHAR8) == 1, "sizeof (CHAR8) does not meet UEFI Specification Data Type requirements");
+_Static_assert (sizeof (CHAR16) == 2, "sizeof (CHAR16) does not meet UEFI Specification Data Type requirements");
+_Static_assert (sizeof (L'A') == 2, "sizeof (L'A') does not meet UEFI Specification Data Type requirements");
+_Static_assert (sizeof (L"A") == 4, "sizeof (L\"A\") does not meet UEFI Specification Data Type requirements");
+
+_Static_assert (_Alignof (BOOLEAN) == sizeof (BOOLEAN), "Alignment of BOOLEAN does not meet UEFI Specification Data Type requirements");
+_Static_assert (_Alignof (INT8) == sizeof (INT8), "Alignment of INT8 does not meet UEFI Specification Data Type requirements");
+_Static_assert (_Alignof (UINT8) == sizeof (UINT8), "Alignment of INT16 does not meet UEFI Specification Data Type requirements");
+_Static_assert (_Alignof (INT16) == sizeof (INT16), "Alignment of INT16 does not meet UEFI Specification Data Type requirements");
+_Static_assert (_Alignof (UINT16) == sizeof (UINT16), "Alignment of UINT16 does not meet UEFI Specification Data Type requirements");
+_Static_assert (_Alignof (INT32) == sizeof (INT32), "Alignment of INT32 does not meet UEFI Specification Data Type requirements");
+_Static_assert (_Alignof (UINT32) == sizeof (UINT32), "Alignment of UINT32 does not meet UEFI Specification Data Type requirements");
+_Static_assert (_Alignof (INT64) == sizeof (INT64), "Alignment of INT64 does not meet UEFI Specification Data Type requirements");
+_Static_assert (_Alignof (UINT64) == sizeof (UINT64), "Alignment of UINT64 does not meet UEFI Specification Data Type requirements");
+_Static_assert (_Alignof (CHAR8) == sizeof (CHAR8), "Alignment of CHAR8 does not meet UEFI Specification Data Type requirements");
+_Static_assert (_Alignof (CHAR16) == sizeof (CHAR16), "Alignment of CHAR16 does not meet UEFI Specification Data Type requirements");
+_Static_assert (_Alignof (INTN) == sizeof (INTN), "Alignment of INTN does not meet UEFI Specification Data Type requirements");
+_Static_assert (_Alignof (UINTN) == sizeof (UINTN), "Alignment of UINTN does not meet UEFI Specification Data Type requirements");
+_Static_assert (_Alignof (void *) == sizeof (void *), "Alignment of VOID * does not meet UEFI Specification Data Type requirements");
+# 851 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Base.h"
+typedef enum {
+  __VerifyUint8EnumValue = 0xff
+} __VERIFY_UINT8_ENUM_SIZE;
+
+typedef enum {
+  __VerifyUint16EnumValue = 0xffff
+} __VERIFY_UINT16_ENUM_SIZE;
+
+typedef enum {
+  __VerifyInt32EnumValue = 0x7fffffff
+} __VERIFY_INT32_ENUM_SIZE;
+
+_Static_assert (sizeof (__VERIFY_UINT8_ENUM_SIZE) == 4, "Size of enum does not meet UEFI Specification Data Type requirements");
+_Static_assert (sizeof (__VERIFY_UINT16_ENUM_SIZE) == 4, "Size of enum does not meet UEFI Specification Data Type requirements");
+_Static_assert (sizeof (__VERIFY_INT32_ENUM_SIZE) == 4, "Size of enum does not meet UEFI Specification Data Type requirements");
+
+_Static_assert (_Alignof (__VERIFY_UINT8_ENUM_SIZE) == sizeof (__VERIFY_UINT8_ENUM_SIZE), "Alignment of enum does not meet UEFI Specification Data Type requirements");
+_Static_assert (_Alignof (__VERIFY_UINT16_ENUM_SIZE) == sizeof (__VERIFY_UINT16_ENUM_SIZE), "Alignment of enum does not meet UEFI Specification Data Type requirements");
+_Static_assert (_Alignof (__VERIFY_INT32_ENUM_SIZE) == sizeof (__VERIFY_INT32_ENUM_SIZE), "Alignment of enum does not meet UEFI Specification Data Type requirements");
+# 1025 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Base.h"
+typedef UINTN RETURN_STATUS;
+# 17 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseLib/BaseLib/DEBUG/AutoGen.h" 2
+# 1 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h" 1
+# 22 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+       
+# 808 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+UINTN
+
+LibPcdSetSku (
+  UINTN SkuId
+  );
+# 824 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+UINT8
+
+LibPcdGet8 (
+  UINTN TokenNumber
+  );
+# 840 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+UINT16
+
+LibPcdGet16 (
+  UINTN TokenNumber
+  );
+# 856 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+UINT32
+
+LibPcdGet32 (
+  UINTN TokenNumber
+  );
+# 872 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+UINT64
+
+LibPcdGet64 (
+  UINTN TokenNumber
+  );
+# 888 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+void *
+
+LibPcdGetPtr (
+  UINTN TokenNumber
+  );
+# 904 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+BOOLEAN
+
+LibPcdGetBool (
+  UINTN TokenNumber
+  );
+# 918 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+UINTN
+
+LibPcdGetSize (
+  UINTN TokenNumber
+  );
+# 938 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+UINT8
+
+LibPcdGetEx8 (
+  const GUID *Guid,
+  UINTN TokenNumber
+  );
+# 959 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+UINT16
+
+LibPcdGetEx16 (
+  const GUID *Guid,
+  UINTN TokenNumber
+  );
+# 977 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+UINT32
+
+LibPcdGetEx32 (
+  const GUID *Guid,
+  UINTN TokenNumber
+  );
+# 998 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+UINT64
+
+LibPcdGetEx64 (
+  const GUID *Guid,
+  UINTN TokenNumber
+  );
+# 1019 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+void *
+
+LibPcdGetExPtr (
+  const GUID *Guid,
+  UINTN TokenNumber
+  );
+# 1040 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+BOOLEAN
+
+LibPcdGetExBool (
+  const GUID *Guid,
+  UINTN TokenNumber
+  );
+# 1061 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+UINTN
+
+LibPcdGetExSize (
+  const GUID *Guid,
+  UINTN TokenNumber
+  );
+# 1080 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+RETURN_STATUS
+
+LibPcdSet8S (
+  UINTN TokenNumber,
+  UINT8 Value
+  );
+# 1099 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+RETURN_STATUS
+
+LibPcdSet16S (
+  UINTN TokenNumber,
+  UINT16 Value
+  );
+# 1118 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+RETURN_STATUS
+
+LibPcdSet32S (
+  UINTN TokenNumber,
+  UINT32 Value
+  );
+# 1137 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+RETURN_STATUS
+
+LibPcdSet64S (
+  UINTN TokenNumber,
+  UINT64 Value
+  );
+# 1166 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+RETURN_STATUS
+
+LibPcdSetPtrS (
+  UINTN TokenNumber,
+  UINTN *SizeOfBuffer,
+  const void *Buffer
+  );
+# 1186 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+RETURN_STATUS
+
+LibPcdSetBoolS (
+  UINTN TokenNumber,
+  BOOLEAN Value
+  );
+# 1209 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+RETURN_STATUS
+
+LibPcdSetEx8S (
+  const GUID *Guid,
+  UINTN TokenNumber,
+  UINT8 Value
+  );
+# 1233 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+RETURN_STATUS
+
+LibPcdSetEx16S (
+  const GUID *Guid,
+  UINTN TokenNumber,
+  UINT16 Value
+  );
+# 1257 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+RETURN_STATUS
+
+LibPcdSetEx32S (
+  const GUID *Guid,
+  UINTN TokenNumber,
+  UINT32 Value
+  );
+# 1281 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+RETURN_STATUS
+
+LibPcdSetEx64S (
+  const GUID *Guid,
+  UINTN TokenNumber,
+  UINT64 Value
+  );
+# 1311 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+RETURN_STATUS
+
+LibPcdSetExPtrS (
+  const GUID *Guid,
+  UINTN TokenNumber,
+  UINTN *SizeOfBuffer,
+  void *Buffer
+  );
+# 1336 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+RETURN_STATUS
+
+LibPcdSetExBoolS (
+  const GUID *Guid,
+  UINTN TokenNumber,
+  BOOLEAN Value
+  );
+# 1360 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+typedef
+void
+( *PCD_CALLBACK)(
+  const GUID *CallBackGuid ,
+  UINTN CallBackToken,
+  void *TokenData,
+  UINTN TokenDataSize
+  );
+# 1385 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+void
+
+LibPcdCallbackOnSet (
+  const GUID *Guid ,
+  UINTN TokenNumber,
+  PCD_CALLBACK NotificationFunction
+  );
+# 1406 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+void
+
+LibPcdCancelCallback (
+  const GUID *Guid ,
+  UINTN TokenNumber,
+  PCD_CALLBACK NotificationFunction
+  );
+# 1433 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+UINTN
+
+LibPcdGetNextToken (
+  const GUID *Guid ,
+  UINTN TokenNumber
+  );
+# 1453 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+GUID *
+
+LibPcdGetNextTokenSpace (
+  const GUID *TokenSpaceGuid
+  );
+# 1482 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+void *
+
+LibPatchPcdSetPtr (
+  void *PatchVariable,
+  UINTN MaximumDatumSize,
+  UINTN *SizeOfBuffer,
+  const void *Buffer
+  );
+# 1514 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+RETURN_STATUS
+
+LibPatchPcdSetPtrS (
+  void *PatchVariable,
+  UINTN MaximumDatumSize,
+  UINTN *SizeOfBuffer,
+  const void *Buffer
+  );
+# 1548 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+void *
+
+LibPatchPcdSetPtrAndSize (
+  void *PatchVariable,
+  UINTN *SizeOfPatchVariable,
+  UINTN MaximumDatumSize,
+  UINTN *SizeOfBuffer,
+  const void *Buffer
+  );
+# 1583 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+RETURN_STATUS
+
+LibPatchPcdSetPtrAndSizeS (
+  void *PatchVariable,
+  UINTN *SizeOfPatchVariable,
+  UINTN MaximumDatumSize,
+  UINTN *SizeOfBuffer,
+  const void *Buffer
+  );
+
+typedef enum {
+  PCD_TYPE_8,
+  PCD_TYPE_16,
+  PCD_TYPE_32,
+  PCD_TYPE_64,
+  PCD_TYPE_BOOL,
+  PCD_TYPE_PTR
+} PCD_TYPE;
+
+typedef struct {
+
+
+
+
+  PCD_TYPE PcdType;
+
+
+
+
+  UINTN PcdSize;
+
+
+
+
+
+
+  CHAR8 *PcdName;
+} PCD_INFO;
+# 1634 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+void
+
+LibPcdGetInfo (
+  UINTN TokenNumber,
+  PCD_INFO *PcdInfo
+  );
+# 1654 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+void
+
+LibPcdGetInfoEx (
+  const GUID *Guid,
+  UINTN TokenNumber,
+  PCD_INFO *PcdInfo
+  );
+# 1669 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h"
+UINTN
+
+LibPcdGetSku (
+  void
+  );
+# 18 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseLib/BaseLib/DEBUG/AutoGen.h" 2
+
+extern GUID gEfiCallerIdGuid;
+extern GUID gEdkiiDscPlatformGuid;
+extern CHAR8 *gEfiCallerBaseName;
+
+
+
+
+extern GUID gEfiMdePkgTokenSpaceGuid;
+
+
+extern UINT64 _gPcd_SkuId_Array[];
+
+
+
+extern const UINT32 _gPcd_FixedAtBuild_PcdControlFlowEnforcementPropertyMask;
+
+
+
+
+
+
+extern const BOOLEAN _gPcd_FixedAtBuild_PcdVerifyNodeInList;
+
+
+
+extern const UINT32 _gPcd_FixedAtBuild_PcdMaximumLinkedListLength;
+
+
+
+
+
+
+extern const UINT32 _gPcd_FixedAtBuild_PcdMaximumAsciiStringLength;
+
+
+
+
+
+
+extern const UINT32 _gPcd_FixedAtBuild_PcdMaximumUnicodeStringLength;
+
+
+
+
+
+
+extern const UINT8 _gPcd_FixedAtBuild_PcdSpeculationBarrierType;
+# 0 "<command-line>" 2
+# 1 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/X64/Thunk16.nasm"
+
+# 1 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h" 1
+# 9 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+       
+
+
+# 1 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h" 1
+# 16 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+       
+# 43 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+typedef struct {
+  UINT64 Rbx;
+  UINT64 Rsp;
+  UINT64 Rbp;
+  UINT64 Rdi;
+  UINT64 Rsi;
+  UINT64 R12;
+  UINT64 R13;
+  UINT64 R14;
+  UINT64 R15;
+  UINT64 Rip;
+  UINT64 MxCsr;
+  UINT8 XmmBuffer[160];
+  UINT64 Ssp;
+} BASE_LIBRARY_JUMP_BUFFER;
+# 599 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+StrnLenS (
+  const CHAR16 *String,
+  UINTN MaxSize
+  );
+# 627 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+StrnSizeS (
+  const CHAR16 *String,
+  UINTN MaxSize
+  );
+# 660 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+StrCpyS (
+  CHAR16 *Destination,
+  UINTN DestMax,
+  const CHAR16 *Source
+  );
+# 697 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+StrnCpyS (
+  CHAR16 *Destination,
+  UINTN DestMax,
+  const CHAR16 *Source,
+  UINTN Length
+  );
+# 735 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+StrCatS (
+  CHAR16 *Destination,
+  UINTN DestMax,
+  const CHAR16 *Source
+  );
+# 775 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+StrnCatS (
+  CHAR16 *Destination,
+  UINTN DestMax,
+  const CHAR16 *Source,
+  UINTN Length
+  );
+# 827 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+StrDecimalToUintnS (
+  const CHAR16 *String,
+  CHAR16 **EndPointer ,
+  UINTN *Data
+  );
+# 878 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+StrDecimalToUint64S (
+  const CHAR16 *String,
+  CHAR16 **EndPointer ,
+  UINT64 *Data
+  );
+# 934 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+StrHexToUintnS (
+  const CHAR16 *String,
+  CHAR16 **EndPointer ,
+  UINTN *Data
+  );
+# 990 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+StrHexToUint64S (
+  const CHAR16 *String,
+  CHAR16 **EndPointer ,
+  UINT64 *Data
+  );
+# 1012 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsciiStrnLenS (
+  const CHAR8 *String,
+  UINTN MaxSize
+  );
+# 1038 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsciiStrnSizeS (
+  const CHAR8 *String,
+  UINTN MaxSize
+  );
+# 1068 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+AsciiStrCpyS (
+  CHAR8 *Destination,
+  UINTN DestMax,
+  const CHAR8 *Source
+  );
+# 1102 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+AsciiStrnCpyS (
+  CHAR8 *Destination,
+  UINTN DestMax,
+  const CHAR8 *Source,
+  UINTN Length
+  );
+# 1137 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+AsciiStrCatS (
+  CHAR8 *Destination,
+  UINTN DestMax,
+  const CHAR8 *Source
+  );
+# 1174 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+AsciiStrnCatS (
+  CHAR8 *Destination,
+  UINTN DestMax,
+  const CHAR8 *Source,
+  UINTN Length
+  );
+# 1224 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+AsciiStrDecimalToUintnS (
+  const CHAR8 *String,
+  CHAR8 **EndPointer ,
+  UINTN *Data
+  );
+# 1273 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+AsciiStrDecimalToUint64S (
+  const CHAR8 *String,
+  CHAR8 **EndPointer ,
+  UINT64 *Data
+  );
+# 1326 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+AsciiStrHexToUintnS (
+  const CHAR8 *String,
+  CHAR8 **EndPointer ,
+  UINTN *Data
+  );
+# 1379 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+AsciiStrHexToUint64S (
+  const CHAR8 *String,
+  CHAR8 **EndPointer ,
+  UINT64 *Data
+  );
+# 1404 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+StrLen (
+  const CHAR16 *String
+  );
+# 1428 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+StrSize (
+  const CHAR16 *String
+  );
+# 1462 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+INTN
+
+StrCmp (
+  const CHAR16 *FirstString,
+  const CHAR16 *SecondString
+  );
+# 1501 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+INTN
+
+StrnCmp (
+  const CHAR16 *FirstString,
+  const CHAR16 *SecondString,
+  UINTN Length
+  );
+# 1534 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+CHAR16 *
+
+StrStr (
+  const CHAR16 *String,
+  const CHAR16 *SearchString
+  );
+# 1575 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+StrDecimalToUintn (
+  const CHAR16 *String
+  );
+# 1615 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+StrDecimalToUint64 (
+  const CHAR16 *String
+  );
+# 1656 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+StrHexToUintn (
+  const CHAR16 *String
+  );
+# 1697 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+StrHexToUint64 (
+  const CHAR16 *String
+  );
+# 1753 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+StrToIpv6Address (
+  const CHAR16 *String,
+  CHAR16 **EndPointer ,
+  IPv6_ADDRESS *Address,
+  UINT8 *PrefixLength
+  );
+# 1803 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+StrToIpv4Address (
+  const CHAR16 *String,
+  CHAR16 **EndPointer ,
+  IPv4_ADDRESS *Address,
+  UINT8 *PrefixLength
+  );
+# 1856 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+StrToGuid (
+  const CHAR16 *String,
+  GUID *Guid
+  );
+# 1896 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+StrHexToBytes (
+  const CHAR16 *String,
+  UINTN Length,
+  UINT8 *Buffer,
+  UINTN MaxBufferSize
+  );
+# 1945 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+UnicodeStrToAsciiStrS (
+  const CHAR16 *Source,
+  CHAR8 *Destination,
+  UINTN DestMax
+  );
+# 1996 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+UnicodeStrnToAsciiStrS (
+  const CHAR16 *Source,
+  UINTN Length,
+  CHAR8 *Destination,
+  UINTN DestMax,
+  UINTN *DestinationLength
+  );
+# 2023 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsciiStrLen (
+  const CHAR8 *String
+  );
+# 2046 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsciiStrSize (
+  const CHAR8 *String
+  );
+# 2078 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+INTN
+
+AsciiStrCmp (
+  const CHAR8 *FirstString,
+  const CHAR8 *SecondString
+  );
+# 2114 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+INTN
+
+AsciiStriCmp (
+  const CHAR8 *FirstString,
+  const CHAR8 *SecondString
+  );
+# 2151 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+INTN
+
+AsciiStrnCmp (
+  const CHAR8 *FirstString,
+  const CHAR8 *SecondString,
+  UINTN Length
+  );
+# 2183 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+CHAR8 *
+
+AsciiStrStr (
+  const CHAR8 *String,
+  const CHAR8 *SearchString
+  );
+# 2220 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsciiStrDecimalToUintn (
+  const CHAR8 *String
+  );
+# 2256 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsciiStrDecimalToUint64 (
+  const CHAR8 *String
+  );
+# 2296 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsciiStrHexToUintn (
+  const CHAR8 *String
+  );
+# 2336 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsciiStrHexToUint64 (
+  const CHAR8 *String
+  );
+# 2390 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+AsciiStrToIpv6Address (
+  const CHAR8 *String,
+  CHAR8 **EndPointer ,
+  IPv6_ADDRESS *Address,
+  UINT8 *PrefixLength
+  );
+# 2438 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+AsciiStrToIpv4Address (
+  const CHAR8 *String,
+  CHAR8 **EndPointer ,
+  IPv4_ADDRESS *Address,
+  UINT8 *PrefixLength
+  );
+# 2487 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+AsciiStrToGuid (
+  const CHAR8 *String,
+  GUID *Guid
+  );
+# 2525 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+AsciiStrHexToBytes (
+  const CHAR8 *String,
+  UINTN Length,
+  UINT8 *Buffer,
+  UINTN MaxBufferSize
+  );
+# 2570 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+AsciiStrToUnicodeStrS (
+  const CHAR8 *Source,
+  CHAR16 *Destination,
+  UINTN DestMax
+  );
+# 2620 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+AsciiStrnToUnicodeStrS (
+  const CHAR8 *Source,
+  UINTN Length,
+  CHAR16 *Destination,
+  UINTN DestMax,
+  UINTN *DestinationLength
+  );
+# 2645 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+CHAR16
+
+CharToUpper (
+  CHAR16 Char
+  );
+# 2664 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+CHAR8
+
+AsciiCharToUpper (
+  CHAR8 Chr
+  );
+# 2689 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+Base64Encode (
+  const UINT8 *Source,
+  UINTN SourceLength,
+  CHAR8 *Destination ,
+  UINTN *DestinationSize
+  );
+# 2780 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+RETURN_STATUS
+
+Base64Decode (
+  const CHAR8 *Source ,
+  UINTN SourceSize,
+  UINT8 *Destination ,
+  UINTN *DestinationSize
+  );
+# 2802 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT8
+
+DecimalToBcd8 (
+  UINT8 Value
+  );
+# 2822 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT8
+
+BcdToDecimal8 (
+  UINT8 Value
+  );
+# 2840 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+BOOLEAN
+
+PathRemoveLastItem (
+  CHAR16 *Path
+  );
+# 2859 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+CHAR16 *
+
+PathCleanUpDirectories (
+  CHAR16 *Path
+  );
+# 2931 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+BOOLEAN
+
+IsNodeInList (
+  const LIST_ENTRY *FirstEntry,
+  const LIST_ENTRY *SecondEntry
+  );
+# 2954 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+LIST_ENTRY *
+
+InitializeListHead (
+  LIST_ENTRY *ListHead
+  );
+# 2982 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+LIST_ENTRY *
+
+InsertHeadList (
+  LIST_ENTRY *ListHead,
+  LIST_ENTRY *Entry
+  );
+# 3011 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+LIST_ENTRY *
+
+InsertTailList (
+  LIST_ENTRY *ListHead,
+  LIST_ENTRY *Entry
+  );
+# 3038 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+LIST_ENTRY *
+
+GetFirstNode (
+  const LIST_ENTRY *List
+  );
+# 3065 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+LIST_ENTRY *
+
+GetNextNode (
+  const LIST_ENTRY *List,
+  const LIST_ENTRY *Node
+  );
+# 3093 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+LIST_ENTRY *
+
+GetPreviousNode (
+  const LIST_ENTRY *List,
+  const LIST_ENTRY *Node
+  );
+# 3119 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+BOOLEAN
+
+IsListEmpty (
+  const LIST_ENTRY *ListHead
+  );
+# 3151 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+BOOLEAN
+
+IsNull (
+  const LIST_ENTRY *List,
+  const LIST_ENTRY *Node
+  );
+# 3181 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+BOOLEAN
+
+IsNodeAtEnd (
+  const LIST_ENTRY *List,
+  const LIST_ENTRY *Node
+  );
+# 3214 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+LIST_ENTRY *
+
+SwapListEntries (
+  LIST_ENTRY *FirstEntry,
+  LIST_ENTRY *SecondEntry
+  );
+# 3242 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+LIST_ENTRY *
+
+RemoveEntryList (
+  const LIST_ENTRY *Entry
+  );
+# 3262 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+typedef
+INTN
+( *BASE_SORT_COMPARE)(
+  const void *Buffer1,
+  const void *Buffer2
+  );
+# 3292 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+QuickSort (
+  void *BufferToSort,
+  const UINTN Count,
+  const UINTN ElementSize,
+  BASE_SORT_COMPARE CompareFunction,
+  void *BufferOneElement
+  );
+# 3317 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+LShiftU64 (
+  UINT64 Operand,
+  UINTN Count
+  );
+# 3339 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+RShiftU64 (
+  UINT64 Operand,
+  UINTN Count
+  );
+# 3361 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+ARShiftU64 (
+  UINT64 Operand,
+  UINTN Count
+  );
+# 3384 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+LRotU32 (
+  UINT32 Operand,
+  UINTN Count
+  );
+# 3407 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+RRotU32 (
+  UINT32 Operand,
+  UINTN Count
+  );
+# 3430 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+LRotU64 (
+  UINT64 Operand,
+  UINTN Count
+  );
+# 3453 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+RRotU64 (
+  UINT64 Operand,
+  UINTN Count
+  );
+# 3473 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+INTN
+
+LowBitSet32 (
+  UINT32 Operand
+  );
+# 3493 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+INTN
+
+LowBitSet64 (
+  UINT64 Operand
+  );
+# 3513 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+INTN
+
+HighBitSet32 (
+  UINT32 Operand
+  );
+# 3533 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+INTN
+
+HighBitSet64 (
+  UINT64 Operand
+  );
+# 3552 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+GetPowerOfTwo32 (
+  UINT32 Operand
+  );
+# 3571 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+GetPowerOfTwo64 (
+  UINT64 Operand
+  );
+# 3589 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+SwapBytes16 (
+  UINT16 Value
+  );
+# 3607 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+SwapBytes32 (
+  UINT32 Value
+  );
+# 3625 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+SwapBytes64 (
+  UINT64 Value
+  );
+# 3645 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+MultU64x32 (
+  UINT64 Multiplicand,
+  UINT32 Multiplier
+  );
+# 3666 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+MultU64x64 (
+  UINT64 Multiplicand,
+  UINT64 Multiplier
+  );
+# 3687 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+INT64
+
+MultS64x64 (
+  INT64 Multiplicand,
+  INT64 Multiplier
+  );
+# 3710 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+DivU64x32 (
+  UINT64 Dividend,
+  UINT32 Divisor
+  );
+# 3733 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+ModU64x32 (
+  UINT64 Dividend,
+  UINT32 Divisor
+  );
+# 3759 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+DivU64x32Remainder (
+  UINT64 Dividend,
+  UINT32 Divisor,
+  UINT32 *Remainder
+  );
+# 3786 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+DivU64x64Remainder (
+  UINT64 Dividend,
+  UINT64 Divisor,
+  UINT64 *Remainder
+  );
+# 3817 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+INT64
+
+DivS64x64Remainder (
+  INT64 Dividend,
+  INT64 Divisor,
+  INT64 *Remainder
+  );
+# 3838 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+ReadUnaligned16 (
+  const void *Buffer
+  );
+# 3859 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+WriteUnaligned16 (
+  void *Buffer,
+  UINT16 Value
+  );
+# 3879 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+ReadUnaligned24 (
+  const void *Buffer
+  );
+# 3900 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+WriteUnaligned24 (
+  void *Buffer,
+  UINT32 Value
+  );
+# 3920 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+ReadUnaligned32 (
+  const void *Buffer
+  );
+# 3941 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+WriteUnaligned32 (
+  void *Buffer,
+  UINT32 Value
+  );
+# 3961 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+ReadUnaligned64 (
+  const void *Buffer
+  );
+# 3982 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+WriteUnaligned64 (
+  void *Buffer,
+  UINT64 Value
+  );
+# 4012 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT8
+
+BitFieldRead8 (
+  UINT8 Operand,
+  UINTN StartBit,
+  UINTN EndBit
+  );
+# 4043 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT8
+
+BitFieldWrite8 (
+  UINT8 Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT8 Value
+  );
+# 4076 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT8
+
+BitFieldOr8 (
+  UINT8 Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT8 OrData
+  );
+# 4109 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT8
+
+BitFieldAnd8 (
+  UINT8 Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT8 AndData
+  );
+# 4145 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT8
+
+BitFieldAndThenOr8 (
+  UINT8 Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT8 AndData,
+  UINT8 OrData
+  );
+# 4174 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+BitFieldRead16 (
+  UINT16 Operand,
+  UINTN StartBit,
+  UINTN EndBit
+  );
+# 4205 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+BitFieldWrite16 (
+  UINT16 Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT16 Value
+  );
+# 4238 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+BitFieldOr16 (
+  UINT16 Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT16 OrData
+  );
+# 4271 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+BitFieldAnd16 (
+  UINT16 Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT16 AndData
+  );
+# 4307 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+BitFieldAndThenOr16 (
+  UINT16 Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT16 AndData,
+  UINT16 OrData
+  );
+# 4336 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+BitFieldRead32 (
+  UINT32 Operand,
+  UINTN StartBit,
+  UINTN EndBit
+  );
+# 4367 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+BitFieldWrite32 (
+  UINT32 Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT32 Value
+  );
+# 4400 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+BitFieldOr32 (
+  UINT32 Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT32 OrData
+  );
+# 4433 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+BitFieldAnd32 (
+  UINT32 Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT32 AndData
+  );
+# 4469 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+BitFieldAndThenOr32 (
+  UINT32 Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT32 AndData,
+  UINT32 OrData
+  );
+# 4498 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+BitFieldRead64 (
+  UINT64 Operand,
+  UINTN StartBit,
+  UINTN EndBit
+  );
+# 4529 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+BitFieldWrite64 (
+  UINT64 Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT64 Value
+  );
+# 4562 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+BitFieldOr64 (
+  UINT64 Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT64 OrData
+  );
+# 4595 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+BitFieldAnd64 (
+  UINT64 Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT64 AndData
+  );
+# 4631 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+BitFieldAndThenOr64 (
+  UINT64 Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT64 AndData,
+  UINT64 OrData
+  );
+# 4661 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT8
+
+BitFieldCountOnes32 (
+  UINT32 Operand,
+  UINTN StartBit,
+  UINTN EndBit
+  );
+# 4689 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT8
+
+BitFieldCountOnes64 (
+  UINT64 Operand,
+  UINTN StartBit,
+  UINTN EndBit
+  );
+# 4767 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+ConvertGuidToUuid (
+  GUID *FromGuid,
+  GUID *ToUuid
+  );
+# 4785 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+ConvertUuidToGuid (
+  GUID *FromUuid,
+  GUID *ToGuid
+  );
+# 4814 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT8
+
+CalculateSum8 (
+  const UINT8 *Buffer,
+  UINTN Length
+  );
+# 4839 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT8
+
+CalculateCheckSum8 (
+  const UINT8 *Buffer,
+  UINTN Length
+  );
+# 4865 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+CalculateSum16 (
+  const UINT16 *Buffer,
+  UINTN Length
+  );
+# 4892 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+CalculateCheckSum16 (
+  const UINT16 *Buffer,
+  UINTN Length
+  );
+# 4918 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+CalculateSum32 (
+  const UINT32 *Buffer,
+  UINTN Length
+  );
+# 4945 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+CalculateCheckSum32 (
+  const UINT32 *Buffer,
+  UINTN Length
+  );
+# 4971 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+CalculateSum64 (
+  const UINT64 *Buffer,
+  UINTN Length
+  );
+# 4998 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+CalculateCheckSum64 (
+  const UINT64 *Buffer,
+  UINTN Length
+  );
+# 5018 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+CalculateCrc32 (
+  void *Buffer,
+  UINTN Length
+  );
+# 5034 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+CalculateCrc16Ansi (
+  const void *Buffer,
+  UINTN Length,
+  UINT16 InitialValue
+  );
+# 5056 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+CalculateCrc32c (
+  const void *Buffer,
+  UINTN Length,
+  UINT32 InitialValue
+  );
+# 5073 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+CalculateCrc16CcittF (
+  const void *Buffer,
+  UINTN Length,
+  UINT16 InitialValue
+  );
+# 5091 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+typedef
+void
+( *SWITCH_STACK_ENTRY_POINT)(
+  void *Context1 ,
+  void *Context2
+  );
+# 5105 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+MemoryFence (
+  void
+  );
+# 5132 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+__attribute__((returns_twice))
+UINTN
+
+SetJump (
+  BASE_LIBRARY_JUMP_BUFFER *JumpBuffer
+  );
+# 5155 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+LongJump (
+  BASE_LIBRARY_JUMP_BUFFER *JumpBuffer,
+  UINTN Value
+  );
+
+
+
+
+
+void
+
+EnableInterrupts (
+  void
+  );
+
+
+
+
+
+void
+
+DisableInterrupts (
+  void
+  );
+# 5190 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+BOOLEAN
+
+SaveAndDisableInterrupts (
+  void
+  );
+
+
+
+
+
+
+void
+
+EnableDisableInterrupts (
+  void
+  );
+# 5217 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+BOOLEAN
+
+GetInterruptState (
+  void
+  );
+# 5237 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+BOOLEAN
+
+SetInterruptState (
+  BOOLEAN InterruptState
+  );
+# 5250 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+CpuPause (
+  void
+  );
+# 5285 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+SwitchStack (
+  SWITCH_STACK_ENTRY_POINT EntryPoint,
+  void *Context1 ,
+  void *Context2 ,
+  void *NewStack,
+  ...
+  );
+# 5302 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+CpuBreakpoint (
+  void
+  );
+# 5317 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+CpuDeadLoop (
+  void
+  );
+# 5330 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+SpeculationBarrier (
+  void
+  );
+# 5350 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+TdCall (
+  UINT64 Leaf,
+  UINT64 Arg1,
+  UINT64 Arg2,
+  UINT64 Arg3,
+  void *Results
+  );
+# 5375 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+TdVmCall (
+  UINT64 Leaf,
+  UINT64 Arg1,
+  UINT64 Arg2,
+  UINT64 Arg3,
+  UINT64 Arg4,
+  void *Results
+  );
+
+
+
+
+
+
+
+BOOLEAN
+
+TdIsEnabled (
+  void
+  );
+
+
+
+
+
+
+
+BOOLEAN
+
+SevGuestIsEnabled (
+  void
+  );
+
+
+
+
+
+typedef enum {
+  PvalidatePageSize4K = 0,
+  PvalidatePageSize2MB,
+} PVALIDATE_PAGE_SIZE;
+# 5451 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+AsmPvalidate (
+  PVALIDATE_PAGE_SIZE PageSize,
+  BOOLEAN Validate,
+  PHYSICAL_ADDRESS Address
+  );
+# 5486 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+AsmRmpAdjust (
+  UINT64 Rax,
+  UINT64 Rcx,
+  UINT64 Rdx
+  );
+# 5505 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmReadFsBase (
+  void
+  );
+# 5524 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmWriteFsBase (
+  UINT64 FsBase
+  );
+# 5537 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+typedef union {
+  struct {
+    UINT32 CF : 1;
+    UINT32 Reserved_0 : 1;
+    UINT32 PF : 1;
+    UINT32 Reserved_1 : 1;
+    UINT32 AF : 1;
+    UINT32 Reserved_2 : 1;
+    UINT32 ZF : 1;
+    UINT32 SF : 1;
+    UINT32 TF : 1;
+    UINT32 IF : 1;
+    UINT32 DF : 1;
+    UINT32 OF : 1;
+    UINT32 IOPL : 2;
+    UINT32 NT : 1;
+    UINT32 Reserved_3 : 1;
+  } Bits;
+  UINT16 Uint16;
+} IA32_FLAGS16;
+
+
+
+
+
+
+typedef union {
+  struct {
+    UINT32 CF : 1;
+    UINT32 Reserved_0 : 1;
+    UINT32 PF : 1;
+    UINT32 Reserved_1 : 1;
+    UINT32 AF : 1;
+    UINT32 Reserved_2 : 1;
+    UINT32 ZF : 1;
+    UINT32 SF : 1;
+    UINT32 TF : 1;
+    UINT32 IF : 1;
+    UINT32 DF : 1;
+    UINT32 OF : 1;
+    UINT32 IOPL : 2;
+    UINT32 NT : 1;
+    UINT32 Reserved_3 : 1;
+    UINT32 RF : 1;
+    UINT32 VM : 1;
+    UINT32 AC : 1;
+    UINT32 VIF : 1;
+    UINT32 VIP : 1;
+    UINT32 ID : 1;
+    UINT32 Reserved_4 : 10;
+  } Bits;
+  UINTN UintN;
+} IA32_EFLAGS32;
+
+
+
+
+
+
+typedef union {
+  struct {
+    UINT32 PE : 1;
+    UINT32 MP : 1;
+    UINT32 EM : 1;
+    UINT32 TS : 1;
+    UINT32 ET : 1;
+    UINT32 NE : 1;
+    UINT32 Reserved_0 : 10;
+    UINT32 WP : 1;
+    UINT32 Reserved_1 : 1;
+    UINT32 AM : 1;
+    UINT32 Reserved_2 : 10;
+    UINT32 NW : 1;
+    UINT32 CD : 1;
+    UINT32 PG : 1;
+  } Bits;
+  UINTN UintN;
+} IA32_CR0;
+
+
+
+
+
+
+typedef union {
+  struct {
+    UINT32 VME : 1;
+    UINT32 PVI : 1;
+    UINT32 TSD : 1;
+    UINT32 DE : 1;
+    UINT32 PSE : 1;
+    UINT32 PAE : 1;
+    UINT32 MCE : 1;
+    UINT32 PGE : 1;
+    UINT32 PCE : 1;
+
+    UINT32 OSFXSR : 1;
+
+    UINT32 OSXMMEXCPT : 1;
+
+
+    UINT32 UMIP : 1;
+    UINT32 LA57 : 1;
+    UINT32 VMXE : 1;
+    UINT32 SMXE : 1;
+    UINT32 Reserved_3 : 1;
+    UINT32 FSGSBASE : 1;
+    UINT32 PCIDE : 1;
+    UINT32 OSXSAVE : 1;
+    UINT32 Reserved_4 : 1;
+    UINT32 SMEP : 1;
+    UINT32 SMAP : 1;
+    UINT32 PKE : 1;
+    UINT32 Reserved_5 : 9;
+  } Bits;
+  UINTN UintN;
+} IA32_CR4;
+
+
+
+
+typedef union {
+  struct {
+    UINT32 LimitLow : 16;
+    UINT32 BaseLow : 16;
+    UINT32 BaseMid : 8;
+    UINT32 Type : 4;
+    UINT32 S : 1;
+    UINT32 DPL : 2;
+    UINT32 P : 1;
+    UINT32 LimitHigh : 4;
+    UINT32 AVL : 1;
+    UINT32 L : 1;
+    UINT32 DB : 1;
+    UINT32 G : 1;
+    UINT32 BaseHigh : 8;
+  } Bits;
+  UINT64 Uint64;
+} IA32_SEGMENT_DESCRIPTOR;
+
+
+
+
+
+typedef struct {
+  UINT16 Limit;
+  UINTN Base;
+} IA32_DESCRIPTOR;
+# 5781 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+typedef union {
+  struct {
+    UINT32 OffsetLow : 16;
+    UINT32 Selector : 16;
+    UINT32 Reserved_0 : 8;
+    UINT32 GateType : 8;
+    UINT32 OffsetHigh : 16;
+    UINT32 OffsetUpper : 32;
+    UINT32 Reserved_1 : 32;
+  } Bits;
+  struct {
+    UINT64 Uint64;
+    UINT64 Uint64_1;
+  } Uint128;
+} IA32_IDT_GATE_DESCRIPTOR;
+
+
+
+
+
+typedef struct {
+  UINT32 Reserved_0;
+  UINT64 RSP0;
+  UINT64 RSP1;
+  UINT64 RSP2;
+  UINT64 Reserved_28;
+  UINT64 IST[7];
+  UINT64 Reserved_92;
+  UINT16 Reserved_100;
+  UINT16 IOMapBaseAddress;
+} IA32_TASK_STATE_SEGMENT;
+
+typedef union {
+  struct {
+    UINT32 LimitLow : 16;
+    UINT32 BaseLow : 16;
+    UINT32 BaseMidl : 8;
+    UINT32 Type : 4;
+    UINT32 Reserved_43 : 1;
+    UINT32 DPL : 2;
+    UINT32 P : 1;
+    UINT32 LimitHigh : 4;
+    UINT32 AVL : 1;
+    UINT32 Reserved_52 : 2;
+    UINT32 G : 1;
+    UINT32 BaseMidh : 8;
+    UINT32 BaseHigh : 32;
+    UINT32 Reserved_96 : 32;
+  } Bits;
+  struct {
+    UINT64 Uint64;
+    UINT64 Uint64_1;
+  } Uint128;
+} IA32_TSS_DESCRIPTOR;
+
+
+
+
+
+
+
+typedef struct {
+  UINT8 Buffer[512];
+} IA32_FX_BUFFER;
+
+
+
+
+typedef struct {
+  UINT32 Reserved1;
+  UINT32 Reserved2;
+  UINT32 Reserved3;
+  UINT32 Reserved4;
+  UINT8 BL;
+  UINT8 BH;
+  UINT16 Reserved5;
+  UINT8 DL;
+  UINT8 DH;
+  UINT16 Reserved6;
+  UINT8 CL;
+  UINT8 CH;
+  UINT16 Reserved7;
+  UINT8 AL;
+  UINT8 AH;
+  UINT16 Reserved8;
+} IA32_BYTE_REGS;
+
+typedef struct {
+  UINT16 DI;
+  UINT16 Reserved1;
+  UINT16 SI;
+  UINT16 Reserved2;
+  UINT16 BP;
+  UINT16 Reserved3;
+  UINT16 SP;
+  UINT16 Reserved4;
+  UINT16 BX;
+  UINT16 Reserved5;
+  UINT16 DX;
+  UINT16 Reserved6;
+  UINT16 CX;
+  UINT16 Reserved7;
+  UINT16 AX;
+  UINT16 Reserved8;
+} IA32_WORD_REGS;
+
+typedef struct {
+  UINT32 EDI;
+  UINT32 ESI;
+  UINT32 EBP;
+  UINT32 ESP;
+  UINT32 EBX;
+  UINT32 EDX;
+  UINT32 ECX;
+  UINT32 EAX;
+  UINT16 DS;
+  UINT16 ES;
+  UINT16 FS;
+  UINT16 GS;
+  IA32_EFLAGS32 EFLAGS;
+  UINT32 Eip;
+  UINT16 CS;
+  UINT16 SS;
+} IA32_DWORD_REGS;
+
+typedef union {
+  IA32_DWORD_REGS E;
+  IA32_WORD_REGS X;
+  IA32_BYTE_REGS H;
+} IA32_REGISTER_SET;
+
+
+
+
+typedef struct {
+  IA32_REGISTER_SET *RealModeState;
+  void *RealModeBuffer;
+  UINT32 RealModeBufferSize;
+  UINT32 ThunkAttributes;
+} THUNK_CONTEXT;
+# 5938 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+typedef void (X86_ASSEMBLY_PATCH_LABEL) (
+  void
+  );
+# 5967 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+AsmCpuid (
+  UINT32 Index,
+  UINT32 *Eax ,
+  UINT32 *Ebx ,
+  UINT32 *Ecx ,
+  UINT32 *Edx
+  );
+# 6009 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+AsmCpuidEx (
+  UINT32 Index,
+  UINT32 SubIndex,
+  UINT32 *Eax ,
+  UINT32 *Ebx ,
+  UINT32 *Ecx ,
+  UINT32 *Edx
+  );
+# 6027 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmDisableCache (
+  void
+  );
+# 6040 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmEnableCache (
+  void
+  );
+# 6060 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+AsmReadMsr32 (
+  UINT32 Index
+  );
+# 6083 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+AsmWriteMsr32 (
+  UINT32 Index,
+  UINT32 Value
+  );
+# 6109 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+AsmMsrOr32 (
+  UINT32 Index,
+  UINT32 OrData
+  );
+# 6135 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+AsmMsrAnd32 (
+  UINT32 Index,
+  UINT32 AndData
+  );
+# 6164 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+AsmMsrAndThenOr32 (
+  UINT32 Index,
+  UINT32 AndData,
+  UINT32 OrData
+  );
+# 6194 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+AsmMsrBitFieldRead32 (
+  UINT32 Index,
+  UINTN StartBit,
+  UINTN EndBit
+  );
+# 6227 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+AsmMsrBitFieldWrite32 (
+  UINT32 Index,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT32 Value
+  );
+# 6263 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+AsmMsrBitFieldOr32 (
+  UINT32 Index,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT32 OrData
+  );
+# 6299 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+AsmMsrBitFieldAnd32 (
+  UINT32 Index,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT32 AndData
+  );
+# 6339 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+AsmMsrBitFieldAndThenOr32 (
+  UINT32 Index,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT32 AndData,
+  UINT32 OrData
+  );
+# 6363 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmReadMsr64 (
+  UINT32 Index
+  );
+# 6386 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmWriteMsr64 (
+  UINT32 Index,
+  UINT64 Value
+  );
+# 6411 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmMsrOr64 (
+  UINT32 Index,
+  UINT64 OrData
+  );
+# 6436 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmMsrAnd64 (
+  UINT32 Index,
+  UINT64 AndData
+  );
+# 6464 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmMsrAndThenOr64 (
+  UINT32 Index,
+  UINT64 AndData,
+  UINT64 OrData
+  );
+# 6494 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmMsrBitFieldRead64 (
+  UINT32 Index,
+  UINTN StartBit,
+  UINTN EndBit
+  );
+# 6526 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmMsrBitFieldWrite64 (
+  UINT32 Index,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT64 Value
+  );
+# 6562 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmMsrBitFieldOr64 (
+  UINT32 Index,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT64 OrData
+  );
+# 6598 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmMsrBitFieldAnd64 (
+  UINT32 Index,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT64 AndData
+  );
+# 6637 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmMsrBitFieldAndThenOr64 (
+  UINT32 Index,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINT64 AndData,
+  UINT64 OrData
+  );
+# 6657 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmReadEflags (
+  void
+  );
+# 6673 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmReadCr0 (
+  void
+  );
+# 6689 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmReadCr2 (
+  void
+  );
+# 6705 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmReadCr3 (
+  void
+  );
+# 6721 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmReadCr4 (
+  void
+  );
+# 6738 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmWriteCr0 (
+  UINTN Cr0
+  );
+# 6755 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmWriteCr2 (
+  UINTN Cr2
+  );
+# 6772 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmWriteCr3 (
+  UINTN Cr3
+  );
+# 6789 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmWriteCr4 (
+  UINTN Cr4
+  );
+# 6805 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmReadDr0 (
+  void
+  );
+# 6821 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmReadDr1 (
+  void
+  );
+# 6837 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmReadDr2 (
+  void
+  );
+# 6853 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmReadDr3 (
+  void
+  );
+# 6869 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmReadDr4 (
+  void
+  );
+# 6885 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmReadDr5 (
+  void
+  );
+# 6901 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmReadDr6 (
+  void
+  );
+# 6917 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmReadDr7 (
+  void
+  );
+# 6934 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmWriteDr0 (
+  UINTN Dr0
+  );
+# 6951 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmWriteDr1 (
+  UINTN Dr1
+  );
+# 6968 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmWriteDr2 (
+  UINTN Dr2
+  );
+# 6985 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmWriteDr3 (
+  UINTN Dr3
+  );
+# 7002 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmWriteDr4 (
+  UINTN Dr4
+  );
+# 7019 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmWriteDr5 (
+  UINTN Dr5
+  );
+# 7036 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmWriteDr6 (
+  UINTN Dr6
+  );
+# 7053 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmWriteDr7 (
+  UINTN Dr7
+  );
+# 7068 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+AsmReadCs (
+  void
+  );
+# 7083 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+AsmReadDs (
+  void
+  );
+# 7098 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+AsmReadEs (
+  void
+  );
+# 7113 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+AsmReadFs (
+  void
+  );
+# 7128 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+AsmReadGs (
+  void
+  );
+# 7143 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+AsmReadSs (
+  void
+  );
+# 7158 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+AsmReadTr (
+  void
+  );
+# 7175 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmReadGdtr (
+  IA32_DESCRIPTOR *Gdtr
+  );
+# 7192 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmWriteGdtr (
+  const IA32_DESCRIPTOR *Gdtr
+  );
+# 7209 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmReadIdtr (
+  IA32_DESCRIPTOR *Idtr
+  );
+# 7226 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmWriteIdtr (
+  const IA32_DESCRIPTOR *Idtr
+  );
+# 7241 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT16
+
+AsmReadLdtr (
+  void
+  );
+# 7256 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmWriteLdtr (
+  UINT16 Ldtr
+  );
+# 7275 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmFxSave (
+  IA32_FX_BUFFER *Buffer
+  );
+# 7295 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmFxRestore (
+  const IA32_FX_BUFFER *Buffer
+  );
+# 7310 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmReadMm0 (
+  void
+  );
+# 7325 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmReadMm1 (
+  void
+  );
+# 7340 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmReadMm2 (
+  void
+  );
+# 7355 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmReadMm3 (
+  void
+  );
+# 7370 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmReadMm4 (
+  void
+  );
+# 7385 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmReadMm5 (
+  void
+  );
+# 7400 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmReadMm6 (
+  void
+  );
+# 7415 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmReadMm7 (
+  void
+  );
+# 7430 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmWriteMm0 (
+  UINT64 Value
+  );
+# 7445 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmWriteMm1 (
+  UINT64 Value
+  );
+# 7460 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmWriteMm2 (
+  UINT64 Value
+  );
+# 7475 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmWriteMm3 (
+  UINT64 Value
+  );
+# 7490 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmWriteMm4 (
+  UINT64 Value
+  );
+# 7505 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmWriteMm5 (
+  UINT64 Value
+  );
+# 7520 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmWriteMm6 (
+  UINT64 Value
+  );
+# 7535 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmWriteMm7 (
+  UINT64 Value
+  );
+# 7550 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmReadTsc (
+  void
+  );
+# 7567 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmReadPmc (
+  UINT32 Index
+  );
+# 7589 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmMonitor (
+  UINTN Eax,
+  UINTN Ecx,
+  UINTN Edx
+  );
+# 7611 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINTN
+
+AsmMwait (
+  UINTN Eax,
+  UINTN Ecx
+  );
+# 7625 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmWbinvd (
+  void
+  );
+# 7638 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmInvd (
+  void
+  );
+# 7659 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void *
+
+AsmFlushCacheLine (
+  void *LinearAddress
+  );
+# 7702 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmEnablePaging32 (
+  SWITCH_STACK_ENTRY_POINT EntryPoint,
+  void *Context1 ,
+  void *Context2 ,
+  void *NewStack
+  );
+# 7745 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmDisablePaging32 (
+  SWITCH_STACK_ENTRY_POINT EntryPoint,
+  void *Context1 ,
+  void *Context2 ,
+  void *NewStack
+  );
+# 7786 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmEnablePaging64 (
+  UINT16 Cs,
+  UINT64 EntryPoint,
+  UINT64 Context1 ,
+  UINT64 Context2 ,
+  UINT64 NewStack
+  );
+# 7826 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmDisablePaging64 (
+  UINT16 Cs,
+  UINT32 EntryPoint,
+  UINT32 Context1 ,
+  UINT32 Context2 ,
+  UINT32 NewStack
+  );
+# 7861 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmGetThunk16Properties (
+  UINT32 *RealModeBufferSize,
+  UINT32 *ExtraStackSize
+  );
+# 7882 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmPrepareThunk16 (
+  THUNK_CONTEXT *ThunkContext
+  );
+# 7941 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmThunk16 (
+  THUNK_CONTEXT *ThunkContext
+  );
+# 7967 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmPrepareAndThunk16 (
+  THUNK_CONTEXT *ThunkContext
+  );
+# 7984 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+BOOLEAN
+
+AsmRdRand16 (
+  UINT16 *Rand
+  );
+# 8001 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+BOOLEAN
+
+AsmRdRand32 (
+  UINT32 *Rand
+  );
+# 8018 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+BOOLEAN
+
+AsmRdRand64 (
+  UINT64 *Rand
+  );
+
+
+
+
+
+
+void
+
+AsmWriteTr (
+  UINT16 Selector
+  );
+# 8042 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmLfence (
+  void
+  );
+# 8058 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmXGetBv (
+  UINT32 Index
+  );
+# 8081 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT64
+
+AsmXSetBv (
+  UINT32 Index,
+  UINT64 Value
+  );
+# 8095 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+AsmVmgExit (
+  void
+  );
+
+
+
+
+typedef struct {
+  void *Caa;
+  UINT64 RaxIn;
+  UINT64 RcxIn;
+  UINT64 RdxIn;
+  UINT64 R8In;
+  UINT64 R9In;
+  UINT64 RaxOut;
+  UINT64 RcxOut;
+  UINT64 RdxOut;
+  UINT64 R8Out;
+  UINT64 R9Out;
+  UINT8 *CallPending;
+} SVSM_CALL_DATA;
+# 8134 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+UINT32
+
+AsmVmgExitSvsm (
+  SVSM_CALL_DATA *SvsmCallData
+  );
+# 8174 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseLib.h"
+void
+
+PatchInstructionX86 (
+  X86_ASSEMBLY_PATCH_LABEL *InstructionEnd,
+  UINT64 PatchValue,
+  UINTN ValueSize
+  );
+# 13 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h" 2
+# 1 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h" 1
+# 13 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+       
+# 32 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+void *
+
+CopyMem (
+  void *DestinationBuffer,
+  const void *SourceBuffer,
+  UINTN Length
+  );
+# 54 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+void *
+
+SetMem (
+  void *Buffer,
+  UINTN Length,
+  UINT8 Value
+  );
+# 81 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+void *
+
+SetMem16 (
+  void *Buffer,
+  UINTN Length,
+  UINT16 Value
+  );
+# 108 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+void *
+
+SetMem32 (
+  void *Buffer,
+  UINTN Length,
+  UINT32 Value
+  );
+# 135 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+void *
+
+SetMem64 (
+  void *Buffer,
+  UINTN Length,
+  UINT64 Value
+  );
+# 162 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+void *
+
+SetMemN (
+  void *Buffer,
+  UINTN Length,
+  UINTN Value
+  );
+# 184 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+void *
+
+ZeroMem (
+  void *Buffer,
+  UINTN Length
+  );
+# 213 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+INTN
+
+CompareMem (
+  const void *DestinationBuffer,
+  const void *SourceBuffer,
+  UINTN Length
+  );
+# 240 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+void *
+
+ScanMem8 (
+  const void *Buffer,
+  UINTN Length,
+  UINT8 Value
+  );
+# 269 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+void *
+
+ScanMem16 (
+  const void *Buffer,
+  UINTN Length,
+  UINT16 Value
+  );
+# 298 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+void *
+
+ScanMem32 (
+  const void *Buffer,
+  UINTN Length,
+  UINT32 Value
+  );
+# 327 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+void *
+
+ScanMem64 (
+  const void *Buffer,
+  UINTN Length,
+  UINT64 Value
+  );
+# 356 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+void *
+
+ScanMemN (
+  const void *Buffer,
+  UINTN Length,
+  UINTN Value
+  );
+# 379 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+GUID *
+
+CopyGuid (
+  GUID *DestinationGuid,
+  const GUID *SourceGuid
+  );
+# 402 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+BOOLEAN
+
+CompareGuid (
+  const GUID *Guid1,
+  const GUID *Guid2
+  );
+# 431 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+void *
+
+ScanGuid (
+  const void *Buffer,
+  UINTN Length,
+  const GUID *Guid
+  );
+# 453 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+BOOLEAN
+
+IsZeroGuid (
+  const GUID *Guid
+  );
+# 475 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h"
+BOOLEAN
+
+IsZeroBuffer (
+  const void *Buffer,
+  UINTN Length
+  );
+# 14 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h" 2
+# 1 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/DebugLib.h" 1
+# 23 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/DebugLib.h"
+       
+# 134 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/DebugLib.h"
+void
+
+DebugPrint (
+  UINTN ErrorLevel,
+  const CHAR8 *Format,
+  ...
+  );
+# 157 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/DebugLib.h"
+void
+
+DebugVPrint (
+  UINTN ErrorLevel,
+  const CHAR8 *Format,
+  VA_LIST VaListMarker
+  );
+# 182 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/DebugLib.h"
+void
+
+DebugBPrint (
+  UINTN ErrorLevel,
+  const CHAR8 *Format,
+  BASE_LIST BaseListMarker
+  );
+# 211 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/DebugLib.h"
+void
+
+DebugAssert (
+  const CHAR8 *FileName,
+  UINTN LineNumber,
+  const CHAR8 *Description
+  );
+# 234 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/DebugLib.h"
+void *
+
+DebugClearMemory (
+  void *Buffer,
+  UINTN Length
+  );
+# 251 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/DebugLib.h"
+BOOLEAN
+
+DebugAssertEnabled (
+  void
+  );
+# 267 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/DebugLib.h"
+BOOLEAN
+
+DebugPrintEnabled (
+  void
+  );
+# 283 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/DebugLib.h"
+BOOLEAN
+
+DebugCodeEnabled (
+  void
+  );
+# 299 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/DebugLib.h"
+BOOLEAN
+
+DebugClearMemoryEnabled (
+  void
+  );
+# 314 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/DebugLib.h"
+BOOLEAN
+
+DebugPrintLevelEnabled (
+  const UINTN ErrorLevel
+  );
+# 15 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h" 2
+# 34 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+UINT64
+
+InternalMathLShiftU64 (
+  UINT64 Operand,
+  UINTN Count
+  );
+# 54 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+UINT64
+
+InternalMathRShiftU64 (
+  UINT64 Operand,
+  UINTN Count
+  );
+# 74 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+UINT64
+
+InternalMathARShiftU64 (
+  UINT64 Operand,
+  UINTN Count
+  );
+# 95 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+UINT64
+
+InternalMathLRotU64 (
+  UINT64 Operand,
+  UINTN Count
+  );
+# 116 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+UINT64
+
+InternalMathRRotU64 (
+  UINT64 Operand,
+  UINTN Count
+  );
+# 135 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+UINT64
+
+InternalMathSwapBytes64 (
+  UINT64 Operand
+  );
+# 155 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+UINT64
+
+InternalMathMultU64x32 (
+  UINT64 Multiplicand,
+  UINT32 Multiplier
+  );
+# 176 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+UINT64
+
+InternalMathMultU64x64 (
+  UINT64 Multiplicand,
+  UINT64 Multiplier
+  );
+# 197 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+UINT64
+
+InternalMathDivU64x32 (
+  UINT64 Dividend,
+  UINT32 Divisor
+  );
+# 218 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+UINT32
+
+InternalMathModU64x32 (
+  UINT64 Dividend,
+  UINT32 Divisor
+  );
+# 242 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+UINT64
+
+InternalMathDivRemU64x32 (
+  UINT64 Dividend,
+  UINT32 Divisor,
+  UINT32 *Remainder
+  );
+# 267 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+UINT64
+
+InternalMathDivRemU64x64 (
+  UINT64 Dividend,
+  UINT64 Divisor,
+  UINT64 *Remainder
+  );
+# 292 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+INT64
+
+InternalMathDivRemS64x64 (
+  INT64 Dividend,
+  INT64 Divisor,
+  INT64 *Remainder
+  );
+# 324 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+void
+
+InternalSwitchStack (
+  SWITCH_STACK_ENTRY_POINT EntryPoint,
+  void *Context1 ,
+  void *Context2 ,
+  void *NewStack,
+  VA_LIST Marker
+  );
+# 346 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+UINTN
+
+BitFieldReadUint (
+  UINTN Operand,
+  UINTN StartBit,
+  UINTN EndBit
+  );
+# 370 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+UINTN
+
+BitFieldOrUint (
+  UINTN Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINTN OrData
+  );
+# 395 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+UINTN
+
+BitFieldAndUint (
+  UINTN Operand,
+  UINTN StartBit,
+  UINTN EndBit,
+  UINTN AndData
+  );
+# 415 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+void
+
+InternalAssertJumpBuffer (
+  BASE_LIBRARY_JUMP_BUFFER *JumpBuffer
+  );
+# 432 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+void
+
+InternalLongJump (
+  BASE_LIBRARY_JUMP_BUFFER *JumpBuffer,
+  UINTN Value
+  );
+# 452 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+BOOLEAN
+
+InternalIsDecimalDigitCharacter (
+  CHAR16 Char
+  );
+# 471 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+UINTN
+
+InternalHexCharToUintn (
+  CHAR16 Char
+  );
+# 491 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+BOOLEAN
+
+InternalIsHexaDecimalDigitCharacter (
+  CHAR16 Char
+  );
+# 510 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+BOOLEAN
+
+InternalAsciiIsDecimalDigitCharacter (
+  CHAR8 Char
+  );
+# 530 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+BOOLEAN
+
+InternalAsciiIsHexaDecimalDigitCharacter (
+  CHAR8 Char
+  );
+# 549 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+UINTN
+
+InternalAsciiHexCharToUintn (
+  CHAR8 Char
+  );
+# 569 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+void
+
+InternalX86ReadGdtr (
+  IA32_DESCRIPTOR *Gdtr
+  );
+# 584 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+void
+
+InternalX86WriteGdtr (
+  const IA32_DESCRIPTOR *Gdtr
+  );
+# 599 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+void
+
+InternalX86ReadIdtr (
+  IA32_DESCRIPTOR *Idtr
+  );
+# 614 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+void
+
+InternalX86WriteIdtr (
+  const IA32_DESCRIPTOR *Idtr
+  );
+# 630 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+void
+
+InternalX86FxSave (
+  IA32_FX_BUFFER *Buffer
+  );
+# 646 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+void
+
+InternalX86FxRestore (
+  const IA32_FX_BUFFER *Buffer
+  );
+# 685 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+void
+
+InternalX86EnablePaging32 (
+  SWITCH_STACK_ENTRY_POINT EntryPoint,
+  void *Context1 ,
+  void *Context2 ,
+  void *NewStack
+  );
+# 724 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+void
+
+InternalX86DisablePaging32 (
+  SWITCH_STACK_ENTRY_POINT EntryPoint,
+  void *Context1 ,
+  void *Context2 ,
+  void *NewStack
+  );
+# 760 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+void
+
+InternalX86EnablePaging64 (
+  UINT16 Cs,
+  UINT64 EntryPoint,
+  UINT64 Context1 ,
+  UINT64 Context2 ,
+  UINT64 NewStack
+  );
+# 796 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+void
+
+InternalX86DisablePaging64 (
+  UINT16 Cs,
+  UINT32 EntryPoint,
+  UINT32 Context1 ,
+  UINT32 Context2 ,
+  UINT32 NewStack
+  );
+# 815 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+BOOLEAN
+
+InternalX86RdRand16 (
+  UINT16 *Rand
+  );
+# 830 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+BOOLEAN
+
+InternalX86RdRand32 (
+  UINT32 *Rand
+  );
+# 846 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+BOOLEAN
+
+InternalX86RdRand64 (
+  UINT64 *Rand
+  );
+# 859 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLibInternals.h"
+void
+
+InternalX86WriteFsBase (
+  UINT64 FsBase
+  );
+
+
+
+
+
+
+UINT64
+
+InternalX86ReadFsBase (
+  void
+  );
+# 3 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/X64/Thunk16.nasm" 2
+
+;------------------------------------------------------------------------------
+;
+; Copyright (c) 2006 - 2018, Intel Corporation. All rights reserved.<BR>
+; SPDX-License-Identifier: BSD-2-Clause-Patent
+;
+; Module Name:
+;
+; Thunk.asm
+;
+; Abstract:
+;
+; Real mode thunk
+;
+;------------------------------------------------------------------------------
+
+global m16Size
+global mThunk16Attr
+global m16Gdt
+global m16GdtrBase
+global mTransition
+global m16Start
+
+struc IA32_REGS
+
+  ._EDI: resd 1
+  ._ESI: resd 1
+  ._EBP: resd 1
+  ._ESP: resd 1
+  ._EBX: resd 1
+  ._EDX: resd 1
+  ._ECX: resd 1
+  ._EAX: resd 1
+  ._DS: resw 1
+  ._ES: resw 1
+  ._FS: resw 1
+  ._GS: resw 1
+  ._EFLAGS: resq 1
+  ._EIP: resd 1
+  ._CS: resw 1
+  ._SS: resw 1
+  .size:
+
+endstruc
+
+SECTION .data
+
+;
+; These are global constant to convey information to C code.
+;
+m16Size DW InternalAsmThunk16 - m16Start
+mThunk16Attr DW _BackFromUserCode.ThunkAttrEnd - 4 - m16Start
+m16Gdt DW _NullSeg - m16Start
+m16GdtrBase DW _16GdtrBase - m16Start
+mTransition DW _EntryPoint - m16Start
+
+SECTION .text
+
+m16Start:
+
+SavedGdt:
+            dw 0
+            dq 0
+
+;------------------------------------------------------------------------------
+; _BackFromUserCode() takes control in real mode after 'retf' has been executed
+; by user code. It will be shadowed to somewhere in memory below 1MB.
+;------------------------------------------------------------------------------
+_BackFromUserCode:
+    ;
+    ; The order of saved registers on the stack matches the order they appears
+    ; in IA32_REGS structure. This facilitates wrapper function to extract them
+    ; into that structure.
+    ;
+BITS 16
+    push ss
+    push cs
+    ;
+    ; Note: We can't use o32 on the next instruction because of a bug
+    ; in NASM 2.09.04 through 2.10rc1.
+    ;
+    call dword .Base ; push eip
+.Base:
+    push dword 0 ; reserved high order 32 bits of EFlags
+    pushfd
+    cli ; disable interrupts
+    push gs
+    push fs
+    push es
+    push ds
+    pushad
+    mov edx, strict dword 0
+.ThunkAttrEnd:
+    test dl, 0x00000002
+    jz .1
+    mov ax, 2401h
+    int 15h
+    cli ; disable interrupts
+    jnc .2
+.1:
+    test dl, 0x00000004
+    jz .2
+    in al, 92h
+    or al, 2
+    out 92h, al ; deactivate A20M#
+.2:
+    xor eax, eax
+    mov ax, ss
+    lea ebp, [esp + IA32_REGS.size]
+    mov [bp - IA32_REGS.size + IA32_REGS._ESP], ebp
+    mov ebx, [bp - IA32_REGS.size + IA32_REGS._EIP]
+    shl eax, 4 ; shl eax, 4
+    add ebp, eax ; add ebp, eax
+    mov eax, cs
+    shl eax, 4
+    lea eax, [eax + ebx + (.X64JmpEnd - .Base)]
+    mov [cs:bx + (.X64JmpEnd - 6 - .Base)], eax
+    mov eax, strict dword 0
+.SavedCr4End:
+    mov cr4, eax
+o32 lgdt [cs:bx + (SavedGdt - .Base)]
+    mov ecx, 0c0000080h
+    rdmsr
+    or ah, 1
+    wrmsr
+    mov eax, strict dword 0
+.SavedCr0End:
+    mov cr0, eax
+    jmp 0:strict dword 0
+.X64JmpEnd:
+BITS 64
+    nop
+    mov rsp, strict qword 0
+.SavedSpEnd:
+    nop
+    ret
+
+_EntryPoint:
+        DD _ToUserCode - m16Start
+        DW CODE16
+_16Gdtr:
+        DW GDT_SIZE - 1
+_16GdtrBase:
+        DQ 0
+_16Idtr:
+        DW (1 << 10) - 1
+        DD 0
+
+;------------------------------------------------------------------------------
+; _ToUserCode() takes control in real mode before passing control to user code.
+; It will be shadowed to somewhere in memory below 1MB.
+;------------------------------------------------------------------------------
+_ToUserCode:
+BITS 16
+    mov ss, dx ; set new segment selectors
+    mov ds, dx
+    mov es, dx
+    mov fs, dx
+    mov gs, dx
+    mov ecx, 0c0000080h
+    mov cr0, eax ; real mode starts at next instruction
+    rdmsr
+    and ah, ~1
+    wrmsr
+    mov cr4, ebp
+    mov ss, si ; set up 16-bit stack segment
+    mov esp, ebx ; set up 16-bit stack pointer
+    call dword .Base ; push eip
+.Base:
+    pop ebp ; ebp <- address of .Base
+    push word [dword esp + IA32_REGS.size + 2]
+    lea ax, [bp + (.RealMode - .Base)]
+    push ax
+    retf ; execution begins at next instruction
+.RealMode:
+
+o32 lidt [cs:bp + (_16Idtr - .Base)]
+
+    popad
+    pop ds
+    pop es
+    pop fs
+    pop gs
+    popfd
+    lea esp, [esp + 4] ; skip high order 32 bits of EFlags
+
+o32 retf ; transfer control to user code
+
+ALIGN 8
+
+CODE16 equ _16Code - $
+DATA16 equ _16Data - $
+DATA32 equ _32Data - $
+
+_NullSeg DQ 0
+_16Code:
+            DW -1
+            DW 0
+            DB 0
+            DB 9bh
+            DB 8fh ; 16-bit segment, 4GB limit
+            DB 0
+_16Data:
+            DW -1
+            DW 0
+            DB 0
+            DB 93h
+            DB 8fh ; 16-bit segment, 4GB limit
+            DB 0
+_32Data:
+            DW -1
+            DW 0
+            DB 0
+            DB 93h
+            DB 0cfh ; 16-bit segment, 4GB limit
+            DB 0
+
+GDT_SIZE equ $ - _NullSeg
+
+;------------------------------------------------------------------------------
+; IA32_REGISTER_SET *
+;
+; InternalAsmThunk16 (
+; IA32_REGISTER_SET *RegisterSet,
+; void *Transition
+; );
+;------------------------------------------------------------------------------
+global InternalAsmThunk16
+InternalAsmThunk16:
+BITS 64
+    push rbp
+    push rbx
+    push rsi
+    push rdi
+
+    mov ebx, ds
+    push rbx ; Save ds segment register on the stack
+    mov ebx, es
+    push rbx ; Save es segment register on the stack
+    mov ebx, ss
+    push rbx ; Save ss segment register on the stack
+
+    push fs
+    push gs
+    mov rsi, rcx
+    movzx r8d, word [rsi + IA32_REGS._SS]
+    mov edi, [rsi + IA32_REGS._ESP]
+    lea rdi, [edi - (IA32_REGS.size + 4)]
+    imul eax, r8d, 16 ; eax <- r8d(stack segment) * 16
+    mov ebx, edi ; ebx <- stack for 16-bit code
+    push IA32_REGS.size / 4
+    add edi, eax ; edi <- linear address of 16-bit stack
+    pop rcx
+    rep movsd ; copy RegSet
+    lea ecx, [rdx + (_BackFromUserCode.SavedCr4End - m16Start)]
+    mov eax, edx ; eax <- transition code address
+    and edx, 0fh
+    shl eax, 12 ; segment address in high order 16 bits
+    lea ax, [rdx + (_BackFromUserCode - m16Start)] ; offset address
+    stosd ; [edi] <- return address of user code
+
+    sgdt [rsp + 60h] ; save GDT stack in argument space
+    movzx r10, word [rsp + 60h] ; r10 <- GDT limit
+    lea r11, [rcx + (InternalAsmThunk16 - _BackFromUserCode.SavedCr4End) + 0xf]
+    and r11, ~0xf ; r11 <- 16-byte aligned shadowed GDT table in real mode buffer
+
+    mov [rcx + (SavedGdt - _BackFromUserCode.SavedCr4End)], r10w ; save the limit of shadowed GDT table
+    mov [rcx + (SavedGdt - _BackFromUserCode.SavedCr4End) + 2], r11 ; save the base address of shadowed GDT table
+
+    mov rsi, [rsp + 62h] ; rsi <- the original GDT base address
+    xchg rcx, r10 ; save rcx to r10 and initialize rcx to be the limit of GDT table
+    inc rcx ; rcx <- the size of memory to copy
+    xchg rdi, r11 ; save rdi to r11 and initialize rdi to the base address of shadowed GDT table
+    rep movsb ; perform memory copy to shadow GDT table
+    mov rcx, r10 ; restore the original rcx before memory copy
+    mov rdi, r11 ; restore the original rdi before memory copy
+
+    sidt [rsp + 50h] ; save IDT stack in argument space
+    mov rax, cr0
+    mov [rcx + (_BackFromUserCode.SavedCr0End - 4 - _BackFromUserCode.SavedCr4End)], eax
+    and eax, 7ffffffeh ; clear PE, PG bits
+    mov rbp, cr4
+    mov [rcx - 4], ebp ; save CR4 in _BackFromUserCode.SavedCr4End - 4
+    and ebp, ~30h ; clear PAE, PSE bits
+    mov esi, r8d ; esi <- 16-bit stack segment
+    push DATA32
+    pop rdx ; rdx <- 32-bit data segment selector
+    lgdt [rcx + (_16Gdtr - _BackFromUserCode.SavedCr4End)]
+    mov ss, edx
+    pushfq
+    lea edx, [rdx + DATA16 - DATA32]
+    lea r8, [REL .RetFromRealMode]
+    push r8
+    mov r8d, cs
+    mov [rcx + (_BackFromUserCode.X64JmpEnd - 2 - _BackFromUserCode.SavedCr4End)], r8w
+    mov [rcx + (_BackFromUserCode.SavedSpEnd - 8 - _BackFromUserCode.SavedCr4End)], rsp
+    jmp dword far [rcx + (_EntryPoint - _BackFromUserCode.SavedCr4End)]
+.RetFromRealMode:
+    popfq
+    lgdt [rsp + 60h] ; restore protected mode GDTR
+    lidt [rsp + 50h] ; restore protected mode IDTR
+    lea eax, [rbp - IA32_REGS.size]
+    pop gs
+    pop fs
+    pop rbx
+    mov ss, ebx
+    pop rbx
+    mov es, ebx
+    pop rbx
+    mov ds, ebx
+
+    pop rdi
+    pop rsi
+    pop rbx
+    pop rbp
+
+    ret

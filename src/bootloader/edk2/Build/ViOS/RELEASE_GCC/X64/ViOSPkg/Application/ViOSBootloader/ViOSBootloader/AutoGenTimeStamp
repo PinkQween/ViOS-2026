@@ -1,0 +1,16 @@
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/ViOSPkg/Application/ViOSBootloader/ViOSBootloader.inf
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/StackCheckLibNull/StackCheckLibNull.inf
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/UefiMemoryAllocationLib/UefiMemoryAllocationLib.inf
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseMemoryLib/BaseMemoryLib.inf
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/UefiLib/UefiLib.inf
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/RegisterFilterLibNull/RegisterFilterLibNull.inf
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/ViOSPkg/Application/ViOSBootloader/ViOSBootloader.c
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/BaseLib.inf
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/UefiBootServicesTableLib/UefiBootServicesTableLib.inf
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib.inf
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/UefiApplicationEntryPoint/UefiApplicationEntryPoint.inf
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/ViOSPkg/Application/ViOSBootloader/ViOSBootloader/DEBUG/AutoGen.h
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/UefiRuntimeServicesTableLib/UefiRuntimeServicesTableLib.inf
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BasePrintLib/BasePrintLib.inf

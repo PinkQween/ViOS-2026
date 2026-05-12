@@ -1,0 +1,34 @@
+;------------------------------------------------------------------------------
+# 1 "/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/X64/XGetBv.nasm"
+;
+; Copyright (C) 2020, Advanced Micro Devices, Inc. All rights reserved.<BR>
+; SPDX-License-Identifier: BSD-2-Clause-Patent
+;
+; Module Name:
+;
+; XGetBv.Asm
+;
+; Abstract:
+;
+; AsmXgetBv function
+;
+; Notes:
+;
+;------------------------------------------------------------------------------
+
+    DEFAULT REL
+    SECTION .text
+
+;------------------------------------------------------------------------------
+; UINT64
+;
+; AsmXGetBv (
+; UINT32 Index
+; );
+;------------------------------------------------------------------------------
+global AsmXGetBv
+AsmXGetBv:
+    xgetbv
+    shl rdx, 32
+    or rax, rdx
+    ret

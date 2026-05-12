@@ -396,6 +396,14 @@ status_t process_load_for_slot(
 
     if (new_process->filetype == PROCESS_TYPE_ELF)
     {
+        // TODO: Implement 32-bit ELF process execution support
+        // Need to handle mode switching, compatibility mode, and 32-bit address space
+        if (new_process->elf->elf_class == ELFCLASS32)
+        {
+            res = STATUS_ERR(ENOSYS);
+            goto fail;
+        }
+
         new_process->main_thread->registers.rip =
             (uint64_t)elf_entry_point(
                 new_process->elf

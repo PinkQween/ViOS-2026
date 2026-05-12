@@ -35,7 +35,6 @@ UefiMain (
   IN EFI_SYSTEM_TABLE  *SystemTable
   )
 {
-  EFI_STATUS Status;
   
   /* Disable watchdog timer */
   gBS->SetWatchdogTimer (0, 0, 0, NULL);

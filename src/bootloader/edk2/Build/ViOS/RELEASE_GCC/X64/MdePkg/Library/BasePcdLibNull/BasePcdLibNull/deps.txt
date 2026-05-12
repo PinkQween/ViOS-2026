@@ -1,0 +1,7 @@
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BasePcdLibNull/BasePcdLibNull/DEBUG/AutoGen.h
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Base.h
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/BaseMemoryLib.h
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/DebugLib.h
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/X64/ProcessorBind.h
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BasePcdLibNull/PcdLib.c

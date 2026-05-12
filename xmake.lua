@@ -154,6 +154,8 @@ target("kernel_c")
     set_symbols("debug")
     add_includedirs("include", {public = true})
     add_files("src/*.c", "src/**/*.c")
+    -- Exclude EDK2 bootloader from kernel build (built separately with EDK2 tools)
+    remove_files("src/bootloader/edk2/**/*.c")
     add_cflags(
         "-ffreestanding",
         "-nostdinc",
@@ -220,38 +222,5 @@ target("image")
         if is_macos then
             os.exec("sudo chown -R $(whoami) bin")
         end
-    end)
-target_end()
-
--- =========================================================
--- RUN BIOS
--- =========================================================
-target("run-bios")
-    set_kind("phony")
-    set_default(false)
-    add_deps("image")
-    on_build(function ()
-        os.exec("qemu-system-x86_64 -nographic -serial mon:stdio -drive file=bin/os.bin,format=raw,if=ide")
-    end)
-target_end()
-
--- =========================================================
--- RUN EDK2
--- =========================================================
-target("run-edk2")
-    set_kind("phony")
-    set_default(false)
-    add_deps("image")
-    on_build(function ()
-        if not os.isfile(ovmf_code) or not os.isfile(ovmf_vars) then
-            raise("OVMF firmware not found:\n" .. ovmf_code .. "\n" .. ovmf_vars)
-        end
-        os.cp(ovmf_vars, "bin/OVMF_VARS.fd")
-        os.exec(string.format(
-            "qemu-system-x86_64 -drive if=pflash,format=raw,readonly=on,file=%s " ..
-            "-drive if=pflash,format=raw,file=bin/OVMF_VARS.fd " ..
-            "-drive file=bin/os.bin,format=raw,if=ide",
-            ovmf_code
-        ))
     end)
 target_end()

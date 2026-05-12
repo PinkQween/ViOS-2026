@@ -1,0 +1,7 @@
+/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseLib/BaseLib/OUTPUT/X64/TdCall.obj:  /home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/X64/TdCall.nasm \
+ /home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseLib/BaseLib/DEBUG/AutoGen.h \
+ /home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Base.h \
+ /home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/X64/ProcessorBind.h \
+ /home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/Library/PcdLib.h
+
+# Updated 

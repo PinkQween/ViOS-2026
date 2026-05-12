@@ -1,0 +1,9 @@
+-I/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib/X64
+-I/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/BaseLib
+-I/home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/MdePkg/Library/BaseLib/BaseLib/DEBUG
+-I/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg
+-I/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include
+-I/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Test/UnitTest/Include
+-I/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Test/Mock/Include
+-I/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Library/MipiSysTLib/mipisyst/library/include
+-I/home/skairipa/Projects/ViOS/src/bootloader/edk2/edk2-repo/MdePkg/Include/X64
