@@ -6,7 +6,7 @@ target("shell")
 
     on_build(function ()
         os.mkdir("programs/shell/build")
-        os.mkdir("assets")
+        os.mkdir("assets/bin")
 
         local cflags =
             "-c " ..
@@ -33,10 +33,10 @@ target("shell")
             "ld -m elf_x86_64 " ..
             "-T programs/shell/linker.ld " ..
             "-nostdlib " ..
-            "-o assets/shell.elf " ..
+            "-o assets/bin/shell " ..
             "programs/stdlib/build/start.o " ..
             "programs/shell/build/shell.o " ..
-            "assets/libvios.a"
+            "programs/stdlib/build/libvios.a"
         )
     end)
 target_end()

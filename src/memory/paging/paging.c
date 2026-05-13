@@ -216,7 +216,13 @@ void paging_switch(struct paging_desc* desc)
 
 void paging_map_e820_memory_regions(struct paging_desc* desc)
 {
-    paging_map_to(desc, (void*)0, (void*)0, (void*)0x100000, PAGING_IS_PRESENT | PAGING_IS_WRITEABLE);
+    paging_map_to(
+        desc,
+        (void*)0,
+        (void*)0,
+        (void*)KERNEL_BOOT_IDENTITY_MAP_LIMIT,
+        PAGING_IS_PRESENT | PAGING_IS_WRITEABLE
+    );
 
     size_t total_entries = e820_total_entries();
     

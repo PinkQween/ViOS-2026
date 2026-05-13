@@ -19,6 +19,8 @@
 [PatchPcd.X64]
 
 [Protocols.X64]
+  gEfiLoadedImageProtocolGuid
+
   ## SOMETIMES_CONSUMES
   gEfiDevicePathProtocolGuid
 
@@ -62,6 +64,8 @@
 [Ppis.X64]
 
 [Guids.X64]
+  gEfiFileInfoGuid
+
   ## SOMETIMES_CONSUMES  ## GUID
   gEfiVTUTF8Guid
 
@@ -160,4 +164,4 @@
 ##   GCC:RELEASE_GCC_X64_VFR_FLAGS = -l -n
 ##   GCC:RELEASE_GCC_X64_RC_FLAGS = -I binary -O elf64-x86-64        -B i386        --rename-section .data=.hii
 ##   GCC:RELEASE_GCC_X64_ASM_FLAGS = -c -x assembler -m64
-##   GCC:RELEASE_GCC_X64_CC_FLAGS = -g -Os -fshort-wchar -fno-builtin -fno-strict-aliasing -Wall -Werror -Wno-array-bounds -include AutoGen.h -fno-common -fstack-protector -ffunction-sections -fdata-sections -DSTRING_ARRAY_NAME=$(BASE_NAME)Strings -mstack-protector-guard=global -m64 "-DEFIAPI=__attribute__((ms_abi))" -maccumulate-outgoing-args -mno-red-zone -Wno-address -mcmodel=small -fpie -fno-asynchronous-unwind-tables -Wno-address  -fno-omit-frame-pointer -flto -DUSING_LTO
+##   GCC:RELEASE_GCC_X64_CC_FLAGS = -g -Os -fshort-wchar -fno-builtin -fno-strict-aliasing -Wall -Werror -Wno-array-bounds -include AutoGen.h -fno-common -fstack-protector -ffunction-sections -fdata-sections -DSTRING_ARRAY_NAME=$(BASE_NAME)Strings -mstack-protector-guard=global -m64 "-DEFIAPI=__attribute__((ms_abi))" -maccumulate-outgoing-args -mno-red-zone -Wno-address -mcmodel=small -fpie -fno-asynchronous-unwind-tables -Wno-address  -fno-omit-frame-pointer -flto -DUSING_LTO -I/home/skairipa/Projects/ViOS/include

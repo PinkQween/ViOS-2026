@@ -6,10 +6,12 @@ struct filesystem fat16_fs =
 {
     .resolve = fat16_resolve,
     .open = fat16_open,
+    .write = fat16_write,
     .read = fat16_read,
     .seek = fat16_seek,
     .stat = fat16_stat,
-    .close = fat16_close
+    .close = fat16_close,
+    .volume_name = fat16_volume_name
 };
 
 struct filesystem* fat16_init()
@@ -64,15 +66,18 @@ status_t fat16_resolve(struct disk* disk)
     }
 
     res = fat16_get_root_directory(disk, fat_internal, &fat_internal->root_directory);
+
     if (status_is_error(res)) {
         goto out;
     }
+
+    strncpy(fat_internal->name, (const char*) fat_internal->header.shared.extended_header.volume_id_string, sizeof(fat_internal->name));
 
 out:
     if (streamer) {
         disk_streamer_close(streamer);
     }
-    
+
     if (status_is_error(res)) {
         if (fat_internal->cluster_streamer) {
             disk_streamer_close(fat_internal->cluster_streamer);
@@ -93,10 +98,6 @@ out:
 
 void* fat16_open(struct disk* disk, struct path_root* path, FILE_SEEK_MODE mode)
 {
-    if (mode != FILE_MODE_READ) {
-        return (void*)STATUS_ERR(EACCES);
-    }
-
     if (!path || !path->first) {
         return (void*)STATUS_ERR(EINVAL);
     }
@@ -117,7 +118,12 @@ void* fat16_open(struct disk* disk, struct path_root* path, FILE_SEEK_MODE mode)
     fd->item = *descriptor_item;
     kfree(descriptor_item);
 
+    fd->mode = mode;
     fd->pos = 0;
+
+    if (mode == FILE_MODE_APPEND && fd->item.type == FAT_ITEM_TYPE_FILE) {
+        fd->pos = fd->item.entry->file_size;
+    }
 
     return fd;
 }
@@ -136,7 +142,7 @@ status_t fat16_seek(void* internal, uint32_t offset, FILE_SEEK_MODE whence)
 
     struct fat_directory_entry* entry = fd->item.entry;
     
-    if (offset >= entry->file_size) {
+    if (offset > entry->file_size) {
         return STATUS_ERR(EINVAL);
     }
 
@@ -188,6 +194,100 @@ status_t fat16_read(struct disk* disk, void* fd, uint32_t size, uint32_t nmemb, 
     return nmemb;
 }
 
+static status_t fat16_write_sector(
+    struct disk* disk,
+    uint32_t sector_index,
+    uint32_t sector_offset,
+    const char* buffer,
+    uint32_t bytes_to_write,
+    uint8_t* sector_buffer
+)
+{
+    status_t res = disk_read_block(disk, (int)sector_index, 1, sector_buffer);
+    if (status_is_error(res)) {
+        return res;
+    }
+
+    memcpy(sector_buffer + sector_offset, buffer, bytes_to_write);
+
+    return disk_write_block(disk, (int)sector_index, 1, sector_buffer);
+}
+
+status_t fat16_write(struct disk* disk, void* fd, uint32_t size, uint32_t nmemb, const char* buffer)
+{
+    struct fat16_file_descriptor* fat_fd = fd;
+    struct fat_directory_entry* entry = fat_fd ? fat_fd->item.entry : NULL;
+    uint32_t total = size * nmemb;
+
+    if (!disk || !fat_fd || !entry || !buffer) {
+        return STATUS_ERR(EINVAL);
+    }
+
+    if (fat_fd->item.type != FAT_ITEM_TYPE_FILE) {
+        return STATUS_ERR(EINVAL);
+    }
+
+    if (entry->attributes & FAT_FILE_READ_ONLY) {
+        return STATUS_ERR(EACCES);
+    }
+
+    if (fat_fd->mode == FILE_MODE_READ) {
+        return STATUS_ERR(EACCES);
+    }
+
+    if (total == 0) {
+        return 0;
+    }
+
+    if (fat_fd->pos > entry->file_size || total > entry->file_size - fat_fd->pos) {
+        return STATUS_ERR(EIO);
+    }
+
+    struct fat16_internal* fat_internal = disk->fs_internal;
+    if (!fat_internal) {
+        return STATUS_ERR(ENODEV);
+    }
+
+    uint32_t first_cluster = fat16_get_first_cluster(entry);
+    uint32_t bytes_written = 0;
+
+    while (bytes_written < total) {
+        int cluster = fat16_get_cluster_for_offset(disk, fat_internal, (int)first_cluster, (int)fat_fd->pos);
+        if (cluster < 0) {
+            return STATUS_ERR(EIO);
+        }
+
+        int cluster_size = fat_internal->header.primary_header.sectors_per_cluster * disk->sector_size;
+        int offset_in_cluster = (int)(fat_fd->pos % (uint32_t)cluster_size);
+        int starting_sector = fat16_cluster_to_sector(fat_internal, cluster);
+        int absolute_byte = fat16_sector_to_absolute(disk, starting_sector) + offset_in_cluster;
+        uint32_t sector_index = (uint32_t)(absolute_byte / disk->sector_size);
+        uint32_t sector_offset = (uint32_t)(absolute_byte % disk->sector_size);
+        uint32_t bytes_available_in_sector = (uint32_t)(disk->sector_size - sector_offset);
+        uint32_t bytes_remaining = total - bytes_written;
+        uint32_t bytes_to_write = bytes_available_in_sector < bytes_remaining ? bytes_available_in_sector : bytes_remaining;
+        uint8_t sector_buffer[SECTOR_SIZE_BYTES];
+
+        status_t res = fat16_write_sector(
+            disk,
+            sector_index,
+            sector_offset,
+            buffer + bytes_written,
+            bytes_to_write,
+            sector_buffer
+        );
+
+        if (status_is_error(res)) {
+            return res;
+        }
+
+        bytes_written += bytes_to_write;
+        fat_fd->pos += bytes_to_write;
+    }
+
+    return nmemb;
+}
+
 void fat16_free_file_descriptor(struct fat16_file_descriptor* internal)
 {
     if (!internal) {
@@ -231,6 +331,19 @@ status_t fat16_close(void* internal)
     }
 
     fat16_free_file_descriptor((struct fat16_file_descriptor*)internal);
+
+    return STATUS_OK;
+}
+
+status_t fat16_volume_name(void* internal, char* name_out, size_t max)
+{
+    if (!internal || !name_out || max == 0) {
+        return STATUS_ERR(EINVAL);
+    }
+
+    struct fat16_internal* fat_internal = internal;
+    
+    strncpy(name_out, fat_internal->name, max);
 
     return STATUS_OK;
 }

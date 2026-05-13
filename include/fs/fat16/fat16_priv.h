@@ -110,6 +110,7 @@ struct fat16_item
 struct fat16_file_descriptor
 {
     struct fat16_item item;
+    FILE_MODE mode;
     uint32_t pos;
 };
 
@@ -121,6 +122,8 @@ struct fat16_internal
     struct disk_streamer* cluster_streamer;
     struct disk_streamer* fat_streamer;
     struct disk_streamer* directory_streamer;
+
+    char name[11];
 };
 
 extern struct filesystem fat16_fs;
@@ -164,6 +167,18 @@ status_t fat16_seek(void* internal, uint32_t offset, FILE_SEEK_MODE whence);
  * @return STATUS_OK on success, negative status_t on error.
  */
 status_t fat16_read(struct disk* disk, void* fd, uint32_t size, uint32_t nmemb, char* buffer);
+
+/**
+ * Write to an open FAT16 file descriptor.
+ *
+ * @param disk Target disk descriptor.
+ * @param fd FAT16 file descriptor pointer.
+ * @param size Size of each element to write.
+ * @param nmemb Number of elements to write.
+ * @param buffer Input buffer for write data.
+ * @return STATUS_OK on success, negative status_t on error.
+ */
+status_t fat16_write(struct disk* disk, void* fd, uint32_t size, uint32_t nmemb, const char* buffer);
 
 /**
  * Release a FAT16 file descriptor and any owned payload.
@@ -348,5 +363,10 @@ struct fat16_item* fat16_find_item_in_directory(struct disk* disk, struct fat16_
  * @return Resolved FAT item or NULL on failure.
  */
 struct fat16_item* fat16_get_directory_entry(struct disk* disk, struct path_part* path);
+
+/**
+ * 
+ */
+status_t fat16_volume_name(void* internal, char* name_out, size_t max);
 
 #endif /* FAT16_PRIV_H */

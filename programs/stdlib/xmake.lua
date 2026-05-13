@@ -4,7 +4,7 @@ target("libvios")
 
     on_build(function ()
         os.mkdir("programs/stdlib/build")
-        os.mkdir("assets")
+        os.mkdir("assets/bin")
 
         local cflags =
             "-c " ..
@@ -64,9 +64,10 @@ target("libvios")
         )
 
         os.exec(
-            "ar rcs assets/libvios.a " ..
-            "programs/stdlib/build/start.c.o " ..
+            "ar rcs programs/stdlib/build/libvios.a " ..
+            "programs/stdlib/build/start.o " ..
             "programs/stdlib/build/vios.asm.o " ..
+            "programs/stdlib/build/start.c.o " ..
             "programs/stdlib/build/vios.o " ..
             "programs/stdlib/build/stdlib.o " ..
             "programs/stdlib/build/stdio.o " ..

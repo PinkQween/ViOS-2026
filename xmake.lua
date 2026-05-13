@@ -20,9 +20,41 @@ local user_programs = {
 }
 
 local kernel_sector_offset = 400
+local tempdir = "bin/tmp"
 
 local ovmf_code = "/usr/share/edk2/x64/OVMF_CODE.4m.fd"
 local ovmf_vars = "/usr/share/edk2/x64/OVMF_VARS.4m.fd"
+
+local edk2_efi_output = "src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/ViOSBootloader.efi"
+
+local function latest_mtime(paths)
+    local latest = 0
+    for _, path in ipairs(paths) do
+        local mtime = os.mtime(path)
+        if mtime and mtime > latest then
+            latest = mtime
+        end
+    end
+    return latest
+end
+
+local function should_rebuild_edk2()
+    if not os.isfile(edk2_efi_output) then
+        return true
+    end
+
+    local edk2_sources = os.files(
+        "src/bootloader/edk2/build-edk2.sh",
+        "src/bootloader/edk2/ViOSPkg/**.c",
+        "src/bootloader/edk2/ViOSPkg/**.h",
+        "src/bootloader/edk2/ViOSPkg/**.inf",
+        "src/bootloader/edk2/ViOSPkg/**.dsc",
+        "src/bootloader/edk2/ViOSPkg/**.dec"
+    )
+
+    local output_mtime = os.mtime(edk2_efi_output) or 0
+    return latest_mtime(edk2_sources) > output_mtime
+end
 
 -- =========================================================
 -- TOOLCHAIN
@@ -154,8 +186,16 @@ target("kernel_c")
     set_symbols("debug")
     add_includedirs("include", {public = true})
     add_files("src/*.c", "src/**/*.c")
-    -- Exclude EDK2 bootloader from kernel build (built separately with EDK2 tools)
     remove_files("src/bootloader/edk2/**/*.c")
+    on_load(function ()
+        local tempdir_abs = os.projectdir() .. "/" .. tempdir
+        os.mkdir(tempdir_abs)
+        os.addenvs({
+            TMPDIR = tempdir_abs,
+            TMP = tempdir_abs,
+            TEMP = tempdir_abs
+        })
+    end)
     add_cflags(
         "-ffreestanding",
         "-nostdinc",
@@ -184,6 +224,50 @@ target("kernel")
 target_end()
 
 -- =========================================================
+-- UEFI IMAGE
+-- =========================================================
+target("uefi")
+    set_kind("phony")
+    set_default(true)
+    add_deps("kernel", "assets")
+    on_build(function ()
+        if should_rebuild_edk2() then
+            cprint("${yellow}[uefi] Building EDK2 bootloader...${clear}")
+            os.execv("sh", {"-c", string.format("cd %s/src/bootloader/edk2 && ./build-edk2.sh", os.projectdir())})
+        else
+            cprint("${green}[uefi] EDK2 bootloader is up to date.${clear}")
+        end
+
+        os.mkdir("bin/uefi/EFI/BOOT")
+        cprint("${yellow}[uefi] Creating bin/os-uefi.img...${clear}")
+        os.exec("dd if=/dev/zero of=bin/os-uefi.img bs=1M count=16 status=none")
+        os.exec("mformat -i bin/os-uefi.img -t 1024 -h 1 -n 64 ::")
+        os.exec("mmd -i bin/os-uefi.img ::/EFI")
+        os.exec("mmd -i bin/os-uefi.img ::/EFI/BOOT")
+        os.exec("mmd -i bin/os-uefi.img ::/bin")
+        os.cp(edk2_efi_output, "bin/uefi/EFI/BOOT/BOOTX64.EFI")
+        os.exec("mcopy -o -i bin/os-uefi.img bin/uefi/EFI/BOOT/BOOTX64.EFI ::/EFI/BOOT/BOOTX64.EFI")
+        os.exec("mcopy -o -i bin/os-uefi.img bin/kernel.bin ::/kernel.bin")
+        for _, program in ipairs(user_programs) do
+            os.exec("mcopy -o -i bin/os-uefi.img assets/bin/" .. program .. " ::/bin/" .. program)
+        end
+    end)
+target_end()
+
+-- =========================================================
+-- BIOS COMMAND
+-- =========================================================
+task("bios")
+    set_menu {
+        usage = "xmake bios",
+        description = "Build the legacy BIOS image"
+    }
+    on_run(function ()
+        os.execv("sh", {"-c", string.format("cd %s && xmake b bios-image", os.projectdir())})
+    end)
+task_end()
+
+-- =========================================================
 -- ASSETS
 -- =========================================================
 target("assets")
@@ -191,31 +275,28 @@ target("assets")
     set_default(false)
     add_deps("libvios", "blank", "shell", "echo")
     on_build(function ()
-        os.rm("bin/assets")
-        os.mkdir("bin/assets")
-        for _, program in ipairs(user_programs) do
-            os.cp("assets/" .. program .. ".elf", "bin/assets/" .. program)
-        end
+        os.mkdir("assets/bin")
     end)
 target_end()
 
 -- =========================================================
--- IMAGE
+-- BIOS IMAGE
 -- =========================================================
-target("image")
+target("bios-image")
     set_kind("phony")
-    set_default(true)
+    set_default(false)
     add_deps("boot", "kernel", "assets")
     on_build(function ()
         os.mkdir("bin")
         os.exec("dd if=/dev/zero of=bin/os.bin bs=1M count=16 status=none")
         os.exec("mformat -i bin/os.bin -t 1024 -h 1 -n 64 -B bin/boot.bin ::")
+        os.exec("mmd -i bin/os.bin ::/bin")
         os.exec(string.format(
             "dd if=bin/kernel.bin of=bin/os.bin bs=512 seek=%d conv=notrunc status=none",
             kernel_sector_offset
         ))
         for _, program in ipairs(user_programs) do
-            os.exec("mcopy -o -i bin/os.bin bin/assets/" .. program .. " ::")
+            os.exec("mcopy -o -i bin/os.bin assets/bin/" .. program .. " ::/bin/" .. program)
         end
     end)
     after_build(function (target)

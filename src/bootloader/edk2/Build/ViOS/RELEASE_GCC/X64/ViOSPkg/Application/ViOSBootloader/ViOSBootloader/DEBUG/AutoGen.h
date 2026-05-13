@@ -26,6 +26,7 @@ extern CHAR8 *gEfiCallerBaseName;
 #define STACK_COOKIE_VALUE 0xA570630763B57FAAULL
 
 // Guids
+extern EFI_GUID gEfiFileInfoGuid;
 extern EFI_GUID gEfiMdePkgTokenSpaceGuid;
 extern EFI_GUID gEfiVTUTF8Guid;
 extern EFI_GUID gEfiVT100Guid;
@@ -45,6 +46,7 @@ extern EFI_GUID gEfiAcpi20TableGuid;
 extern EFI_GUID gEfiAcpi10TableGuid;
 
 // Protocols
+extern EFI_GUID gEfiLoadedImageProtocolGuid;
 extern EFI_GUID gEfiDevicePathProtocolGuid;
 extern EFI_GUID gEfiDebugPortProtocolGuid;
 extern EFI_GUID gEfiDriverBindingProtocolGuid;

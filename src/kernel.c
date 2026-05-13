@@ -228,7 +228,6 @@ static void kernel_load_init_process(void)
 void kernel_main(void)
 {
     kernel_console_init();
-
     kernel_print_banner();
 
     boot_step("Initializing GDT");
@@ -250,6 +249,12 @@ void kernel_main(void)
     panic_if_error(
         "Failed to initialize disks",
         disk_search_and_init()
+    );
+
+    boot_step("Initializing GPT");
+    panic_if_error(
+        "Failed to initialize GPT",
+        gpt_init()
     );
 
     boot_step("Initializing IDT");
@@ -275,6 +280,8 @@ void kernel_main(void)
     idt_unmask_irq(1);
 
     boot_step("Starting task scheduler\n");
+
+    print_ok();
 
     terminal_clear_color_and_reset_cursor(choose_colour(WHITE, BLACK));
 

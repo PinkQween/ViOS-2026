@@ -18,5 +18,15 @@
   BaseMemoryLib
   UefiRuntimeServicesTableLib
 
+[BuildOptions]
+  GCC:*_*_*_CC_FLAGS = -I/home/skairipa/Projects/ViOS/include
+
+[Guids]
+  gEfiFileInfoGuid
+
+[Protocols]
+  gEfiLoadedImageProtocolGuid
+
+
 [Sources]
   ViOSBootloader.c

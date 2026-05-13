@@ -110,7 +110,7 @@ ASMLINK = bin16\link16.exe
 BROTLI_GUID =  3D532050-5CDA-4FD0-879E-0F7F630D5AFB
 BROTLI = BrotliCompress
 
-CC_FLAGS = -g -Os -fshort-wchar -fno-builtin -fno-strict-aliasing -Wall -Werror -Wno-array-bounds -include AutoGen.h -fno-common -fstack-protector -ffunction-sections -fdata-sections -DSTRING_ARRAY_NAME=$(BASE_NAME)Strings -mstack-protector-guard=global -m64 "-DEFIAPI=__attribute__((ms_abi))" -maccumulate-outgoing-args -mno-red-zone -Wno-address -mcmodel=small -fpie -fno-asynchronous-unwind-tables -Wno-address -fno-omit-frame-pointer -flto -DUSING_LTO
+CC_FLAGS = -g -Os -fshort-wchar -fno-builtin -fno-strict-aliasing -Wall -Werror -Wno-array-bounds -include AutoGen.h -fno-common -fstack-protector -ffunction-sections -fdata-sections -DSTRING_ARRAY_NAME=$(BASE_NAME)Strings -mstack-protector-guard=global -m64 "-DEFIAPI=__attribute__((ms_abi))" -maccumulate-outgoing-args -mno-red-zone -Wno-address -mcmodel=small -fpie -fno-asynchronous-unwind-tables -Wno-address -fno-omit-frame-pointer -flto -DUSING_LTO 
 CC = gcc
 
 CRC32_GUID =  FC1BCDB0-7D31-49AA-936A-A4600D9DD083
@@ -220,7 +220,8 @@ INC =  \
     -I$(WORKSPACE)/edk2-repo/MdePkg/Library/MipiSysTLib/mipisyst/library/include \
     -I$(WORKSPACE)/edk2-repo/MdePkg/Include/X64 \
     -I$(WORKSPACE)/ViOSPkg \
-    -I$(WORKSPACE)/ViOSPkg/Include
+    -I$(WORKSPACE)/ViOSPkg/Include \
+    -I/home/skairipa/Projects/ViOS/include
 
 OBJECT_FILES_LIST = /home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/ViOSPkg/Application/ViOSBootloader/ViOSBootloader/OUTPUT/object_files.lst
 STATIC_LIBRARY_FILES_LIST = /home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/ViOSPkg/Application/ViOSBootloader/ViOSBootloader/OUTPUT/static_library_files.lst

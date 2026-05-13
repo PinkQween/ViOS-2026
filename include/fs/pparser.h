@@ -42,7 +42,7 @@ void pathparser_free(struct path_root* root);
 /**
  * Parse a path string into a structured root and part list.
  *
- * @param filepath Input path, e.g. 0:/hello.txt.
+ * @param filepath Input path, e.g. 0:/hello.txt or /bin/echo.
  * @param current_working_directory Reserved for relative-path support.
  * @param root_out Output parsed structure on success.
  * @return STATUS_OK on success, negative status_t on error.

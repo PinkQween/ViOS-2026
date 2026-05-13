@@ -1,34 +1,29 @@
-;=============================================
-; ViOS Kernel Stub (32-bit -> 64-bit)
-;=============================================
 [BITS 32]
 global _start
 global kernel_start
+global kernel_bios_entry
 global kernel_idle
 global enable_interrupts
 global kernel_registers
+global kernel_uefi_entry
+global kernel_long_mode_entry
+global div_test
+global gdt
 
 extern kernel_main
 extern kernel_stack_top
 
-;---------------------------------------------
-; Segment Selectors (GDT entries)
-;---------------------------------------------
 CODE_SEG            equ 0x08
 DATA_SEG            equ 0x10
 LONG_MODE_CODE_SEG  equ 0x18
 LONG_MODE_DATA_SEG  equ 0x10
 
-;---------------------------------------------
-; Entry point (32-bit protected mode)
-;---------------------------------------------
+align 16
 _start:
 kernel_start:
+kernel_bios_entry:
     cli                         ; disable interrupts during setup
 
-    ;-----------------------------
-    ; Initialize segments
-    ;-----------------------------
     mov ax, DATA_SEG
     mov ds, ax
     mov es, ax
@@ -36,155 +31,101 @@ kernel_start:
     mov gs, ax
     mov ss, ax
 
-    ;-----------------------------
-    ; Initialize stack
-    ;-----------------------------
     mov esp, kernel_stack_top
     mov ebp, esp
 
-    ;-----------------------------
-    ; Load the GDT
-    ;-----------------------------
     lgdt [gdt_descriptor]
 
-    ;-----------------------------
-    ; Enable PAE in CR4
-    ;-----------------------------
     mov eax, cr4
     or eax, 1 << 5
     mov cr4, eax
 
-    ;-----------------------------
-    ; Setup paging tables
-    ;-----------------------------
     mov eax, PML4_Table
     mov cr3, eax
 
-    ;-----------------------------
-    ; Enable long mode in IA32_EFER
-    ;-----------------------------
-    mov ecx, 0xC0000080       ; IA32_EFER MSR
+    mov ecx, 0xC0000080
     rdmsr
-    or eax, 0x100             ; set LME bit
+    or eax, 0x100
     wrmsr
 
-    ;-----------------------------
-    ; Enable paging in CR0
-    ;-----------------------------
     mov eax, cr0
-    or eax, 1 << 31           ; set PG bit
+    or eax, 1 << 31
     mov cr0, eax
 
-    ;-----------------------------
-    ; Jump to 64-bit code segment
-    ;-----------------------------
-    jmp LONG_MODE_CODE_SEG:long_mode_entry
+    jmp LONG_MODE_CODE_SEG:kernel_long_mode_entry
 
 [BITS 64]
-;=============================================
-; 64-bit Kernel Code
-;=============================================
-
-;---------------------------------------------
-; Load 64-bit data segments
-;---------------------------------------------
 kernel_registers:
     mov ax, LONG_MODE_DATA_SEG
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
+    mov ss, ax
     ret
 
-;=============================================
-; 64-bit long mode entry point
-;=============================================
-long_mode_entry:
-    ;-----------------------------
-    ; Load 64-bit data segments
-    ;-----------------------------
+align 4096
+kernel_uefi_entry:
+    lgdt [gdt_descriptor]
+
+kernel_long_mode_entry:
+    cli
     call kernel_registers
 
-    ;-----------------------------
-    ; Initialize 64-bit stack
-    ;-----------------------------
-    mov rsp, 0x00200000        ; safe stack location
+    mov rsp, kernel_stack_top
     mov rbp, rsp
 
-    ;-----------------------------
-    ; Remap PIC and enable interrupts
-    ;-----------------------------
-    mov al, 0x11    ; ICW1: Start initialization in cascade mode
-    out 0x20, al    ; Send ICW1 to master command port
+    mov al, 0x11
+    out 0x20, al
 
-    mov al, 0x20    ; ICW2: master PIC vector offset (0x20)
-    out 0x21, al    ; Send ICW2 to master data port
+    mov al, 0x20
+    out 0x21, al
 
-    mov al, 0x04    ; ICW3: Tell master PIC there is a slave pic at IRQ2
-    out 0x21, al    ; Send ICW3 to master data port
+    mov al, 0x04
+    out 0x21, al
 
-    mov al, 0x01    ; ICW3: Set envirionment information (8086/88 mode)
-    out 0x21, al    ; Send ICW4 to master data port
+    mov al, 0x01
+    out 0x21, al
 
-    ; Remap the slave port
-    mov al, 0x11    ; ICW1: Start initilization in cascade mode
-    out 0xA0, al    ; Send ICW1 to slave command port
+    mov al, 0x11
+    out 0xA0, al
 
-    mov al, 0x28    ; ICW2: Slave PIC vector offset 0x28
-    out 0xA1, al    ; Send ICW2 to slave data port
-
-    mov al, 0x02    ; ICW3: Tell slave PIC its cascade identity i.e connected to masters IRQ2
+    mov al, 0x28
     out 0xA1, al
 
-    mov al, 0x01    ; ICW4: Set envirionment (8086/88 mode)
-    out 0xA1, al    ; Send ICW4 to slave data port
+    mov al, 0x02
+    out 0xA1, al
 
-    ; Unmask only the neccessary IRQ's on the master
-    mov al, 0xFB    ; 0xFB = 1111 1011b; All IRQs are masked except IRQ2
-    out 0x21, al    ; Update master PIC's IRQ mask
+    mov al, 0x01
+    out 0xA1, al
 
-    ; Mask all IRQ's on the slave PIC
-    mov al, 0xFF    ; 0xFF = 1111 1111b
-    out 0xA1, al    ; Update slave PIC IRQ mask
+    mov al, 0xFB
+    out 0x21, al
 
-    mov al, 0x20    ; EOI command
-    out 0x20, al    ; Send to master
-    out 0xA0, al    ; Send to slave    
+    mov al, 0xFF
+    out 0xA1, al
 
-    ;-----------------------------
-    ; Jump to kernel main
-    ;-----------------------------
+    mov al, 0x20
+    out 0x20, al
+    out 0xA0, al
+
     call kernel_main
-
-    ;-----------------------------
-    ; Enter idle loop after kernel_main
-    ;-----------------------------
     jmp kernel_idle
 
-;=============================================
-; Kernel idle loop
-;=============================================
 kernel_idle:
     sti
 .idle_loop:
     hlt
     jmp .idle_loop
 
-;=============================================
-; Enable interrupts wrapper
-;=============================================
 enable_interrupts:
     sti
     ret
 
-;=============================================
-; Global Descriptor Table (GDT)
-;=============================================
 align 8
 gdt:
-    dq 0x0000000000000000                ; Null descriptor
+    dq 0x0000000000000000
 
-    ; 32-bit code segment
     dw 0xffff
     dw 0x0000
     db 0x00
@@ -192,7 +133,6 @@ gdt:
     db 11001111b
     db 0x00
 
-    ; 32-bit data segment
     dw 0xffff
     dw 0x0000
     db 0x00
@@ -200,7 +140,6 @@ gdt:
     db 11001111b
     db 0x00
 
-    ; 64-bit code segment
     dw 0x0000
     dw 0x0000
     db 0x00
@@ -208,7 +147,6 @@ gdt:
     db 0x20
     db 0x00
 
-    ; 64-bit data segment
     dw 0x0000
     dw 0x0000
     db 0x00
@@ -216,41 +154,51 @@ gdt:
     db 0x00
     db 0x00
 
+    dw 0x0000
+    dw 0x0000
+    db 0x00
+    db 0xFA
+    db 0x20
+    db 0x00
+
+    dw 0x0000
+    dw 0x0000
+    db 0x00
+    db 0xF2
+    db 0x00
+    db 0x00
+
 gdt_end:
 
 gdt_descriptor:
     dw gdt_end - gdt - 1
-    dd gdt
-
-;=============================================
-; Page Tables (64-bit long mode)
-;=============================================
-%define PAGE_FLAGS 0x03
-%define PAGE_INCREMENT 0x1000
+    dq gdt
 
 align 4096
 PML4_Table:
-    dq PDPT_Table + PAGE_FLAGS         ; Present | RW
+    dq PDPT_Table + 0x03
     times 511 dq 0
 
 align 4096
 PDPT_Table:
-    dq PD_Table + PAGE_FLAGS           ; Present | RW
+    dq PD_Table + 0x03
     times 511 dq 0
 
 align 4096
 PD_Table:
-    %assign table_offset 0
+    %assign page_addr 0
+    %assign page_flags 0x83
+    %assign page_index 0
     %rep 100
-    dq PT_Table + table_offset + PAGE_FLAGS
-    %assign table_offset table_offset + 0x1000
+    dq page_addr + page_flags
+    %assign page_addr page_addr + 0x200000
+    %assign page_index page_index + 1
     %endrep
     times 412 dq 0
 
-align 4096
-PT_Table:
-    %assign addr 0x00000000
-    %rep 512*100
-        dq addr + PAGE_FLAGS
-        %assign addr addr + PAGE_INCREMENT
-    %endrep
+div_test:
+    mov rax, 1
+    xor rdx, rdx
+    xor rcx, rcx
+    idiv rcx
+    ret

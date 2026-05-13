@@ -38,12 +38,44 @@ void* isr80h_command5_process_load_start(struct interrupt_frame* frame)
 
     char path[MAX_PATH];
 
-    if (!safe_strcpy(path, sizeof(path), "0:/") ||
-        !safe_strcat(path, sizeof(path), filename))
+    bool has_slash = false;
+    for (size_t i = 0; filename[i] != '\0'; i++)
     {
-        return (void*)(intptr_t)STATUS_ERR(ENAMETOOLONG);
+        if (filename[i] == '/')
+        {
+            has_slash = true;
+            break;
+        }
     }
 
+    if (filename[0] == '/' || (filename[0] && filename[1] == ':') || has_slash)
+    {
+        if (has_slash && filename[0] != '/')
+        {
+            if (!safe_strcpy(path, sizeof(path), "/") ||
+                !safe_strcat(path, sizeof(path), filename))
+            {
+                return (void*)(intptr_t)STATUS_ERR(ENAMETOOLONG);
+            }
+
+            goto load_path;
+        }
+
+        if (!safe_strcpy(path, sizeof(path), filename))
+        {
+            return (void*)(intptr_t)STATUS_ERR(ENAMETOOLONG);
+        }
+    }
+    else
+    {
+        if (!safe_strcpy(path, sizeof(path), "/bin/") ||
+            !safe_strcat(path, sizeof(path), filename))
+        {
+            return (void*)(intptr_t)STATUS_ERR(ENAMETOOLONG);
+        }
+    }
+
+load_path:
     struct process* process = NULL;
 
     status =
@@ -159,12 +191,44 @@ void* isr80h_command6_invoke_system_command(struct interrupt_frame* frame)
 
     char path[MAX_PATH];
 
-    if (!safe_strcpy(path, sizeof(path), "0:/") ||
-        !safe_strcat(path, sizeof(path), root_arg->argument))
+    bool has_slash = false;
+    for (size_t i = 0; root_arg->argument[i] != '\0'; i++)
     {
-        return (void*)(intptr_t)STATUS_ERR(ENAMETOOLONG);
+        if (root_arg->argument[i] == '/')
+        {
+            has_slash = true;
+            break;
+        }
     }
 
+    if (root_arg->argument[0] == '/' || (root_arg->argument[0] && root_arg->argument[1] == ':') || has_slash)
+    {
+        if (has_slash && root_arg->argument[0] != '/')
+        {
+            if (!safe_strcpy(path, sizeof(path), "/") ||
+                !safe_strcat(path, sizeof(path), root_arg->argument))
+            {
+                return (void*)(intptr_t)STATUS_ERR(ENAMETOOLONG);
+            }
+
+            goto command_path;
+        }
+
+        if (!safe_strcpy(path, sizeof(path), root_arg->argument))
+        {
+            return (void*)(intptr_t)STATUS_ERR(ENAMETOOLONG);
+        }
+    }
+    else
+    {
+        if (!safe_strcpy(path, sizeof(path), "/bin/") ||
+            !safe_strcat(path, sizeof(path), root_arg->argument))
+        {
+            return (void*)(intptr_t)STATUS_ERR(ENAMETOOLONG);
+        }
+    }
+
+command_path:
     struct process* process = NULL;
 
     status_t status =

@@ -152,6 +152,16 @@ status_t fopen(const char* filepath, const char* mode)
 
     struct disk* disk = disk_get(root->drive_number);
 
+    /* Absolute paths without an explicit drive should use whichever disk
+     * actually resolved a filesystem, not hard-coded drive 0. */
+    if ((!disk || !disk->fs) && filepath && filepath[0] == '/') {
+        struct disk* primary_fs = disk_primary_fs_disk();
+        if (primary_fs) {
+            disk = primary_fs;
+            root->drive_number = primary_fs->id;
+        }
+    }
+
     if (!disk) {
         pathparser_free(root);
         return STATUS_ERR(ENOENT);
@@ -236,6 +246,25 @@ status_t fread(void* buffer, uint32_t size, uint32_t nmemb, int fd)
     }
 
     return descriptor->fs->read(descriptor->disk, descriptor->internal, size, nmemb, buffer);
+}
+
+status_t fwrite(const void* buffer, uint32_t size, uint32_t nmemb, int fd)
+{
+    if (size == 0 || nmemb == 0 || fd <= 0) {
+        return STATUS_ERR(EINVAL);
+    }
+
+    struct file_descriptor* descriptor = file_get_descriptor(fd);
+
+    if (!descriptor) {
+        return STATUS_ERR(EINVAL);
+    }
+
+    if (!descriptor->fs || !descriptor->fs->write) {
+        return STATUS_ERR(EINVAL);
+    }
+
+    return descriptor->fs->write(descriptor->disk, descriptor->internal, size, nmemb, (const char*)buffer);
 }
 
 status_t fstat(int fd, struct file_stat* stat)

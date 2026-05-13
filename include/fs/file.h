@@ -72,8 +72,13 @@ typedef status_t(*FS_STAT_FUNCTION)(struct disk* disk, void* internal, struct fi
 /** Filesystem-specific read callback used by VFS. */
 typedef status_t(*FS_READ_FUNCTION)(struct disk* disk, void* fd, uint32_t size, uint32_t nmemb, char* buffer);
 
+/** Filesystem-specific write callback used by VFS. */
+typedef status_t(*FS_WRITE_FUNCTION)(struct disk* disk, void* fd, uint32_t size, uint32_t nmemb, const char* buffer);
+
 /** Filesystem-specific close callback used by VFS. */
 typedef status_t(*FS_CLOSE_FUNCTION)(void* internal);
+
+typedef status_t(*FS_VOLUME_NAME_FUNCTION)(void* internal, char* name_out, size_t max);
 
 /** Registered filesystem driver descriptor. */
 struct filesystem {
@@ -85,10 +90,14 @@ struct filesystem {
     FS_SEEK_FUNCTION seek;
     /** Read callback for this filesystem. */
     FS_READ_FUNCTION read;
+    /** Write callback for this filesystem. */
+    FS_WRITE_FUNCTION write;
     /** Stat callback for this filesystem. */
     FS_STAT_FUNCTION stat;
     /** Close callback for this filesystem. */
     FS_CLOSE_FUNCTION close;
+    /**  */
+    FS_VOLUME_NAME_FUNCTION volume_name;
 
     /** Human-readable filesystem name. */
     char name[20];
@@ -143,6 +152,17 @@ status_t fseek(int fd, int offset, int whence);
  * @return Number of elements successfully read, or negative status_t on error.
  */
 status_t fread(void* ptr, uint32_t size, uint32_t nmemb, int fd);
+
+/**
+ * Write to an open file descriptor from a buffer.
+ *
+ * @param ptr Input buffer for write data.
+ * @param size Size of each element to write in bytes.
+ * @param nmemb Number of elements to write.
+ * @param fd Open file descriptor id.
+ * @return Number of elements successfully written, or negative status_t on error.
+ */
+status_t fwrite(const void* ptr, uint32_t size, uint32_t nmemb, int fd);
 
 /**
  * Get status information for an open file descriptor.

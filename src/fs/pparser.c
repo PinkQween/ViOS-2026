@@ -9,8 +9,18 @@
 
 static bool pathparser_is_valid_format(const char* filepath)
 {
-    if (!filepath || strnlen(filepath, MAX_PATH) == 0) {
+    if (!filepath) {
         return false;
+    }
+
+    size_t len = strnlen(filepath, MAX_PATH);
+
+    if (len == 0 || len >= MAX_PATH) {
+        return false;
+    }
+
+    if (filepath[0] == '/') {
+        return true;
     }
 
     size_t i = 0;
@@ -27,9 +37,29 @@ static bool pathparser_is_valid_format(const char* filepath)
 
 static int pathparser_get_drive_number_by_path(const char** filepath)
 {
-    if (!pathparser_is_valid_format(*filepath))
-    {
+    if (!pathparser_is_valid_format(*filepath)) {
         return STATUS_ERR(EINVAL);
+    }
+
+    if ((*filepath)[0] == '/') {
+        if (strncmp(*filepath, "/dev/sd", 7) == 0 && (*filepath)[7] >= 'a' && (*filepath)[7] <= 'z') {
+            if ((*filepath)[8] != '\0' && (*filepath)[8] != '/') {
+                return STATUS_ERR(EINVAL);
+            }
+
+            int drive_number = (*filepath)[7] - 'a';
+            *filepath += 8;
+            if (**filepath == '/') {
+                (*filepath)++;
+            }
+            return drive_number;
+        }
+
+        while (**filepath == '/') {
+            (*filepath)++;
+        }
+
+        return 0;
     }
 
     int drive_number = 0;
@@ -158,7 +188,7 @@ status_t pathparser_parse_ex(const char* filepath, const char* current_working_d
 
     *root_out = NULL;
 
-    if (strlen(filepath) > MAX_PATH) {
+    if (!filepath || strnlen(filepath, MAX_PATH) >= MAX_PATH) {
         return STATUS_ERR(EINVAL);
     }
 

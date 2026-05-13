@@ -7,6 +7,8 @@ EDK2_REPO="$SCRIPT_DIR/edk2-repo"
 export WORKSPACE="$SCRIPT_DIR"
 export PACKAGES_PATH="$SCRIPT_DIR:$EDK2_REPO"
 export EDK_TOOLS_PATH="$EDK2_REPO/BaseTools"
+export CONF_PATH="$SCRIPT_DIR/Conf"
+export PYTHON_COMMAND=python3
 
 . "$EDK2_REPO/edksetup.sh"
 

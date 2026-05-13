@@ -6,7 +6,7 @@ target("blank")
 
     on_build(function ()
         os.mkdir("programs/blank/build")
-        os.mkdir("assets")
+        os.mkdir("assets/bin")
 
         local cflags =
             "-c " ..
@@ -33,10 +33,10 @@ target("blank")
             "ld -m elf_x86_64 " ..
             "-T programs/blank/linker.ld " ..
             "-nostdlib " ..
-            "-o assets/blank.elf " ..
+            "-o assets/bin/blank " ..
             "programs/stdlib/build/start.o " ..
             "programs/blank/build/blank.o " ..
-            "assets/libvios.a"
+            "programs/stdlib/build/libvios.a"
         )
     end)
 target_end()
