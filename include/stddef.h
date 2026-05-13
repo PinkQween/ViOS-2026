@@ -18,4 +18,6 @@
 typedef unsigned long long size_t;
 typedef signed long long ptrdiff_t;
 
+#define offsetof(type, member) __builtin_offsetof(type, member)
+
 #endif /* STDDEF_H */

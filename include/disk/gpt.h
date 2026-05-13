@@ -1,11 +1,13 @@
 #ifndef GPT_H
 #define GPT_H
 
+#include "status.h"
+
 #include "stdint.h"
 
 #define GPT_MASTER_BOOT_RECORD_LBA 0
 #define GPT_PARTITION_TABLE_HEADER_LBA 1
-#define GPT_SIGNITURE "EFI PART"
+#define GPT_SIGNATURE "EFI PART"
 
 struct gpt_partition_table_header
 {

@@ -10,7 +10,7 @@ struct disk* gpt_primary_disk = NULL;
 
 size_t gpt_partition_table_real_size(struct gpt_partition_table_header* header)
 {
-    return header->hdr_size;
+    return sizeof(*header) + (header->hdr_size - offsetof(struct gpt_partition_table_header, reserved2));
 }
 
 int gpt_partition_table_header_read(struct gpt_partition_table_header* header_out)
@@ -41,7 +41,7 @@ int gpt_mount_partitions(struct gpt_partition_table_header* partition_header)
 
     if (!streamer)
     {
-        res = STATUS_ERR(EINVAL);
+        res = STATUS_ERR(ENODEV);
         goto out;
     }
 
@@ -91,7 +91,7 @@ status_t gpt_init()
 
     if (!gpt_primary_disk)
     {
-        return STATUS_ERR(EINVAL);
+        return STATUS_ERR(ENODEV);
     }
 
     status_t res = gpt_partition_table_header_read(&partition_header);
@@ -99,7 +99,7 @@ status_t gpt_init()
     if (status_is_error(res))
         return res;
 
-    if (memcmp(partition_header.signature, GPT_SIGNITURE, sizeof(partition_header.signature)) != 0)
+    if (memcmp(partition_header.signature, GPT_SIGNATURE, sizeof(partition_header.signature)) != 0)
         return STATUS_ERR(EINVAL);
 
     return gpt_mount_partitions(&partition_header);

@@ -8,6 +8,7 @@
 #include "fs/file.h"
 #include "gdt/gdt.h"
 #include "idt/idt.h"
+#include "disk/gpt.h"
 #include "isr80h/isr80h.h"
 #include "keyboard/keyboard.h"
 #include "memory/heap/kheap.h"
@@ -17,6 +18,9 @@
 #include "task/process.h"
 #include "task/task.h"
 #include "task/tss.h"
+#include "graphics/graphics.h"
+
+extern struct graphics_info default_graphics_info;
 
 /* -------------------------------------------------------------------------- */
 /* Globals                                                                    */
@@ -82,7 +86,7 @@ static void print_ok(void)
 }
 
 static void boot_step(const char* message)
-{
+{;
     print_ok();
     print(message);
     print("\n");
@@ -242,6 +246,20 @@ void kernel_main(void)
     boot_step("Initializing post-paging heap");
     kheap_post_paging();
 
+    graphics_setup(&default_graphics_info);
+
+    struct framebuffer_pixel pixel = {-1, 0, -1, 0};
+
+    for (int x = 0; x < 800; x++)
+    {
+        for (int y = 0; y < 300; y++)
+        {
+            graphics_draw_pixel(graphics_screen_info(), x, y, pixel);
+        }
+    }
+  
+    graphics_redraw_all();
+
     boot_step("Initializing filesystem");
     fs_init();
 
@@ -252,10 +270,7 @@ void kernel_main(void)
     );
 
     boot_step("Initializing GPT");
-    panic_if_error(
-        "Failed to initialize GPT",
-        gpt_init()
-    );
+    gpt_init();
 
     boot_step("Initializing IDT");
     idt_init();
@@ -280,8 +295,6 @@ void kernel_main(void)
     idt_unmask_irq(1);
 
     boot_step("Starting task scheduler\n");
-
-    print_ok();
 
     terminal_clear_color_and_reset_cursor(choose_colour(WHITE, BLACK));
 

@@ -220,7 +220,7 @@ INC =  \
     -I$(WORKSPACE)/edk2-repo/MdePkg/Library/MipiSysTLib/mipisyst/library/include \
     -I$(WORKSPACE)/edk2-repo/MdePkg/Include/X64 \
     -I$(WORKSPACE)/ViOSPkg \
-    -I$(WORKSPACE)/ViOSPkg/Include \
+    -I/home/skairipa/Projects/ViOS/include \
     -I/home/skairipa/Projects/ViOS/include
 
 OBJECT_FILES_LIST = /home/skairipa/Projects/ViOS/src/bootloader/edk2/Build/ViOS/RELEASE_GCC/X64/ViOSPkg/Application/ViOSBootloader/ViOSBootloader/OUTPUT/object_files.lst

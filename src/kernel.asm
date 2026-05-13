@@ -7,7 +7,7 @@ global enable_interrupts
 global kernel_registers
 global kernel_uefi_entry
 global kernel_long_mode_entry
-global div_test
+global default_graphics_info
 global gdt
 
 extern kernel_main
@@ -74,6 +74,12 @@ kernel_long_mode_entry:
 
     mov rsp, kernel_stack_top
     mov rbp, rsp
+
+    mov [default_graphics_info + 0], rdi
+
+    mov [default_graphics_info + 8], edx
+    mov [default_graphics_info + 12], ecx
+    mov [default_graphics_info + 16], esi
 
     mov al, 0x11
     out 0x20, al
@@ -196,9 +202,25 @@ PD_Table:
     %endrep
     times 412 dq 0
 
-div_test:
-    mov rax, 1
-    xor rdx, rdx
-    xor rcx, rcx
-    idiv rcx
-    ret
+align 8
+default_graphics_info:
+    dq 0
+    dd 0
+    dd 0
+    dd 0
+    dd 0
+    dq 0
+    dd 0
+    dd 0
+    dd 0
+    dd 0
+    dd 0
+    dd 0
+    dq 0
+    dq 0
+    dd 0
+    dd 0
+    dd 0
+    dd 0
+    dq 0
+    dq 0
