@@ -248,9 +248,8 @@ target("uefi")
         os.cp(edk2_efi_output, "bin/uefi/EFI/BOOT/BOOTX64.EFI")
         os.exec("mcopy -o -i bin/os-uefi.img bin/uefi/EFI/BOOT/BOOTX64.EFI ::/EFI/BOOT/BOOTX64.EFI")
         os.exec("mcopy -o -i bin/os-uefi.img bin/kernel.bin ::/kernel.bin")
-        for _, program in ipairs(user_programs) do
-            os.exec("mcopy -o -i bin/os-uefi.img assets/bin/" .. program .. " ::/bin/" .. program)
-        end
+        -- copy all top-level asset subdirectories (bin, images, fonts, etc.) into image root
+        os.execv("sh", {"-c", "mcopy -o -i bin/os-uefi.img -s assets/* ::/"})
     end)
 target_end()
 
@@ -295,9 +294,8 @@ target("bios-image")
             "dd if=bin/kernel.bin of=bin/os.bin bs=512 seek=%d conv=notrunc status=none",
             kernel_sector_offset
         ))
-        for _, program in ipairs(user_programs) do
-            os.exec("mcopy -o -i bin/os.bin assets/bin/" .. program .. " ::/bin/" .. program)
-        end
+        -- copy all top-level asset subdirectories into BIOS image root as well
+        os.execv("sh", {"-c", "mcopy -o -i bin/os.bin -s assets/* ::/"})
     end)
     after_build(function (target)
         if is_macos then

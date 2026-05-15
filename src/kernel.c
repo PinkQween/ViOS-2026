@@ -19,6 +19,9 @@
 #include "task/task.h"
 #include "task/tss.h"
 #include "graphics/graphics.h"
+#include "graphics/text/font.h"
+#include "graphics/terminal/terminal.h"
+#include "graphics/image/image.h"
 
 extern struct graphics_info default_graphics_info;
 
@@ -29,6 +32,8 @@ extern struct graphics_info default_graphics_info;
 struct paging_desc* kernel_paging_desc = NULL;
 
 struct tss tss;
+
+struct terminal* system_terminal = NULL;
 
 /* -------------------------------------------------------------------------- */
 /* GDT Layout                                                                 */
@@ -214,7 +219,7 @@ static void kernel_load_init_process(void)
     struct process* process = NULL;
 
     status_t status =
-        process_load_switch(
+        process_load(
             ROOT_PROCESS_PATH,
             &process
         );
@@ -234,69 +239,78 @@ void kernel_main(void)
     kernel_console_init();
     kernel_print_banner();
 
-    boot_step("Initializing GDT");
     kernel_setup_gdt();
+    boot_step("Initializing GDT");
 
-    boot_step("Initializing heap");
     kheap_init();
+    boot_step("Initializing heap");
 
-    boot_step("Setting up paging");
     kernel_setup_paging();
+    boot_step("Setting up paging");
 
-    boot_step("Initializing post-paging heap");
     kheap_post_paging();
+    boot_step("Initializing post-paging heap");
 
     graphics_setup(&default_graphics_info);
 
-    struct framebuffer_pixel pixel = {-1, 0, -1, 0};
-
-    for (int x = 0; x < 800; x++)
-    {
-        for (int y = 0; y < 300; y++)
-        {
-            graphics_draw_pixel(graphics_screen_info(), x, y, pixel);
-        }
-    }
-  
-    graphics_redraw_all();
-
-    boot_step("Initializing filesystem");
     fs_init();
+    boot_step("Initializing filesystem");
 
-    boot_step("Initializing disks");
     panic_if_error(
         "Failed to initialize disks",
         disk_search_and_init()
     );
+    boot_step("Initializing disks");
 
-    boot_step("Initializing GPT");
     gpt_init();
+    boot_step("Initializing GPT");
 
-    boot_step("Initializing IDT");
+    font_system_init();
+    boot_step("Initializing font system");
+
+    terminal_system_setup();
+    {
+        struct graphics_info* screen_info = graphics_screen_info();
+        struct font* font = font_get_system_font();
+        if (font && screen_info)
+        {
+            struct framebuffer_pixel white = {255, 255, 255, 255};
+            struct framebuffer_pixel black = {0, 0, 0, 0};
+            
+            graphics_draw_rect(screen_info, 0, 0, screen_info->width, screen_info->height, black);
+            graphics_redraw_graphics_to_screen(screen_info, 0, 0, screen_info->width, screen_info->height);
+            
+            system_terminal = terminal_create(
+                screen_info, 0, 0,
+                screen_info->width, screen_info->height,
+                font, white,
+                TERMINAL_FLAG_BACKSPACE_ALLOWED
+            );
+        }
+    }
+
     idt_init();
+    boot_step("Initializing IDT");
 
-    boot_step("Registering ISR80H commands");
     isr80h_register_commands();
+    boot_step("Registering ISR80H commands");
 
-    boot_step("Initializing keyboard");
     panic_if_error(
         "Failed to initialize keyboard",
         keyboard_init()
     );
+    boot_step("Initializing keyboard");
 
-    boot_step("Initializing TSS");
     kernel_setup_tss();
+    boot_step("Initializing TSS");
 
-    boot_step("Loading init process");
     kernel_load_init_process();
-
-    boot_step("Enabling hardware IRQs");
-    idt_unmask_irq(0);
-    idt_unmask_irq(1);
-
-    boot_step("Starting task scheduler\n");
+    boot_step("Loading init process");
 
     terminal_clear_color_and_reset_cursor(choose_colour(WHITE, BLACK));
+
+    idt_unmask_irq(0);
+    idt_unmask_irq(1);
 
     task_run_root_task();
 

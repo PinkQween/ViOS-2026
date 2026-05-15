@@ -235,15 +235,6 @@ int fat16_get_total_items_for_directory(struct disk* disk, uint32_t directory_st
 status_t fat16_get_root_directory(struct disk* disk, struct fat16_internal* fat_internal, struct fat16_directory* out_directory);
 
 /**
- * Copy FAT 8.3 text field into normal null-terminated string form.
- *
- * @param dest Destination write cursor pointer.
- * @param src FAT field source string.
- * @return None.
- */
-void fat16_to_proper_string(char** dest, const char* src);
-
-/**
  * Build a normalized file name from FAT directory entry (NAME.EXT).
  *
  * @param entry FAT directory entry.

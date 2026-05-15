@@ -73,29 +73,44 @@ static int fat16_read_from_streamer(struct disk* disk, struct disk_streamer* str
 {
     struct fat16_internal* fat_internal = disk->fs_internal;
     int size_of_cluster = fat_internal->header.primary_header.sectors_per_cluster * disk->sector_size;
+    int bytes_read = 0;
+    int current_offset = offset;
     int cluster_to_use = fat16_get_cluster_for_offset(disk, fat_internal, cluster, offset);
 
     if (cluster_to_use < 0) {
         return STATUS_ERR(EIO);
     }
 
-    int offset_from_cluster = offset % size_of_cluster;
-    int starting_sector = fat16_cluster_to_sector(fat_internal, cluster_to_use);
-    int starting_pos = fat16_sector_to_absolute(disk, starting_sector) + offset_from_cluster;
-    int total_to_read = size > size_of_cluster ? size_of_cluster : size;
+    while (bytes_read < size) {
+        int offset_from_cluster = current_offset % size_of_cluster;
+        int starting_sector = fat16_cluster_to_sector(fat_internal, cluster_to_use);
+        int starting_pos = fat16_sector_to_absolute(disk, starting_sector) + offset_from_cluster;
+        int total_to_read = size - bytes_read;
 
-    if (status_is_error(disk_streamer_seek(streamer, starting_pos))) {
-        return STATUS_ERR(EIO);
-    }
+        if (total_to_read > size_of_cluster - offset_from_cluster) {
+            total_to_read = size_of_cluster - offset_from_cluster;
+        }
 
-    if (status_is_error(disk_streamer_read(streamer, buffer, total_to_read))) {
-        return STATUS_ERR(EIO);
-    }
+        if (status_is_error(disk_streamer_seek(streamer, starting_pos))) {
+            return STATUS_ERR(EIO);
+        }
 
-    size -= total_to_read;
-    if (size > 0) {
-        uint8_t* next_buffer = (uint8_t*)buffer + total_to_read;
-        return fat16_read_from_streamer(disk, streamer, cluster, offset + total_to_read, size, next_buffer);
+        if (status_is_error(disk_streamer_read(streamer, (uint8_t*)buffer + bytes_read, total_to_read))) {
+            return STATUS_ERR(EIO);
+        }
+
+        bytes_read += total_to_read;
+        current_offset += total_to_read;
+
+        if (bytes_read < size && offset_from_cluster + total_to_read >= size_of_cluster) {
+            int next_cluster = fat16_get_fat_entry(disk, cluster_to_use);
+
+            if (next_cluster == 0x00 || next_cluster == FAT16_BAD_SECTOR || next_cluster == 0xFF0 || next_cluster == 0xFF6 || next_cluster >= 0xFF8) {
+                return STATUS_ERR(EIO);
+            }
+
+            cluster_to_use = next_cluster;
+        }
     }
 
     return STATUS_OK;

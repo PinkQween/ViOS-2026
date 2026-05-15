@@ -3,35 +3,24 @@
 #include "io/io.h"
 #include "string/string.h"
 
+#include "graphics/graphics.h"
+#include "graphics/text/font.h"
+#include "graphics/terminal/terminal.h"
+
 #include "stdbool.h"
 #include "stddef.h"
 #include "stdint.h"
 
 #define COM1_PORT 0x3F8
 
-static volatile uint16_t *video_mem = 0;
-static uint16_t terminal_row = 0;
-static uint16_t terminal_column = 0;
 static bool serial_enabled = false;
 
-static void serial_init(void)
-{
-    outb(COM1_PORT + 1, 0x00);
-    outb(COM1_PORT + 3, 0x80);
-    outb(COM1_PORT + 0, 0x03);
-    outb(COM1_PORT + 1, 0x00);
-    outb(COM1_PORT + 3, 0x03);
-    outb(COM1_PORT + 2, 0xC7);
-    outb(COM1_PORT + 4, 0x0B);
-    serial_enabled = true;
-}
+extern struct terminal* system_terminal;
 
 static void serial_writechar(char c)
 {
     if (!serial_enabled)
-    {
         return;
-    }
 
     for (int i = 0; i < 100000; i++)
     {
@@ -63,156 +52,30 @@ char choose_colour(char fg, char bg)
     return (bg << 4) | (fg & 0x0F);
 }
 
-static uint16_t terminal_make_char(char c, char colour)
-{
-    return ((uint16_t)(uint8_t)colour << 8) | (uint8_t)c;
-}
-
-static void terminal_putchar(int x, int y, char c, char colour)
-{
-    if (x < 0 || x >= VGA_WIDTH || y < 0 || y >= VGA_HEIGHT)
-    {
-        return;
-    }
-
-    video_mem[(y * VGA_WIDTH) + x] = terminal_make_char(c, colour);
-}
-
-static void terminal_scroll(void)
-{
-    for (int y = 1; y < VGA_HEIGHT; y++)
-    {
-        for (int x = 0; x < VGA_WIDTH; x++)
-        {
-            uint16_t cell = video_mem[y * VGA_WIDTH + x];
-            terminal_putchar(x, y - 1, cell & 0xFF, cell >> 8);
-        }
-    }
-
-    for (int x = 0; x < VGA_WIDTH; x++)
-    {
-        terminal_putchar(x, VGA_HEIGHT - 1, ' ', WHITE);
-    }
-
-    terminal_row = VGA_HEIGHT - 1;
-}
-
-void terminal_backspace(void)
-{
-    if (terminal_column == 0 && terminal_row == 0)
-    {
-        return;
-    }
-
-    if (terminal_column == 0)
-    {
-        terminal_row--;
-        terminal_column = VGA_WIDTH - 1;
-    }
-    else
-    {
-        terminal_column--;
-    }
-
-    terminal_putchar(terminal_column, terminal_row, ' ', WHITE);
-}
-
-static void terminal_writechar(char c, char colour);
-
-void terminal_tab(void)
-{
-    int spaces_to_next_tab_stop = 4 - (terminal_column % 4);
-    for (int i = 0; i < spaces_to_next_tab_stop; i++)
-    {
-        terminal_writechar(' ', WHITE);
-    }
-}
-
-static void terminal_writechar(char c, char colour)
-{
-    serial_writechar(c);
-
-    if (c == '\n')
-    {
-        terminal_column = 0;
-        terminal_row++;
-    }
-    else if (c == 0x08) // Backspace
-    {
-        terminal_backspace();
-    }
-    else if (c == '\t')
-    {
-        terminal_tab();
-    }
-    else
-    {
-        terminal_putchar(terminal_column, terminal_row, c, colour);
-        terminal_column++;
-    }
-
-    if (terminal_column >= VGA_WIDTH)
-    {
-        terminal_column = 0;
-        terminal_row++;
-    }
-
-    if (terminal_row >= VGA_HEIGHT)
-    {
-        terminal_scroll();
-    }
-}
-
-static void terminal_init(void)
-{
-    video_mem = (volatile uint16_t *)0xB8000;
-    terminal_row = 0;
-    terminal_column = 0;
-
-    for (int y = 0; y < VGA_HEIGHT; y++)
-    {
-        for (int x = 0; x < VGA_WIDTH; x++)
-        {
-            terminal_putchar(x, y, ' ', WHITE);
-        }
-    }
-}
-
 void kernel_console_init()
 {
-    serial_init();
+    outb(COM1_PORT + 1, 0x00);
+    outb(COM1_PORT + 3, 0x80);
+    outb(COM1_PORT + 0, 0x03);
+    outb(COM1_PORT + 1, 0x00);
+    outb(COM1_PORT + 3, 0x03);
+    outb(COM1_PORT + 2, 0xC7);
+    outb(COM1_PORT + 4, 0x0B);
+    serial_enabled = true;
+
     toggle_cursor(false);
-    terminal_init();
 }
 
 void print_w_color(const char *str, char colour)
 {
+    if (!system_terminal)
+        return;
+
     size_t len = strnlen(str, MAX_PATH);
     for (size_t i = 0; i < len; i++)
     {
-        if (str[i] == ' ')
-        {
-            terminal_writechar(' ', colour);
-            continue;
-        }
-
-        size_t word_len = 0;
-        while (i + word_len < len && str[i + word_len] != ' ')
-        {
-            word_len++;
-        }
-
-        if (terminal_column + word_len >= VGA_WIDTH)
-        {
-            terminal_writechar('\n', colour);
-        }
-
-        for (size_t j = 0; j < word_len; j++)
-        {
-            terminal_writechar(str[i + j], colour);
-        }
-
-        i += word_len - 1;
+        terminal_write(system_terminal, str[i]);
+        serial_writechar(str[i]);
     }
 }
 
@@ -223,7 +86,11 @@ void print(const char *str)
 
 void print_char(char c)
 {
-    terminal_writechar(c, WHITE);
+    if (system_terminal)
+    {
+        terminal_write(system_terminal, c);
+    }
+    serial_writechar(c);
 }
 
 void panic(const char *message)
@@ -245,16 +112,66 @@ void panic_status(const char *message, status_t status)
     panic(error_message);
 }
 
+struct framebuffer_pixel vga_foreground_to_pixel_colour(char colour)
+{
+    static const struct framebuffer_pixel vga_palette[16] =
+    {
+        {0x00, 0x00, 0x00, 0}, // BLACK
+        {0xAA, 0x00, 0x00, 0}, // BLUE
+        {0x00, 0xAA, 0x00, 0}, // GREEN
+        {0xAA, 0xAA, 0x00, 0}, // CYAN
+        {0x00, 0x00, 0xAA, 0}, // RED
+        {0xAA, 0x00, 0xAA, 0}, // MAGENTA
+        {0x00, 0x55, 0xAA, 0}, // BROWN
+        {0xAA, 0xAA, 0xAA, 0}, // LIGHT_GREY
+        {0x55, 0x55, 0x55, 0}, // DARK_GREY
+        {0xFF, 0x55, 0x55, 0}, // LIGHT_BLUE
+        {0x55, 0xFF, 0x55, 0}, // LIGHT_GREEN
+        {0xFF, 0xFF, 0x55, 0}, // LIGHT_CYAN
+        {0x55, 0x55, 0xFF, 0}, // LIGHT_RED
+        {0xFF, 0x55, 0xFF, 0}, // LIGHT_MAGENTA
+        {0x55, 0xFF, 0xFF, 0}, // YELLOW
+        {0xFF, 0xFF, 0xFF, 0}, // WHITE
+    };
+
+    return vga_palette[colour & 0x0F];
+}
+
+struct framebuffer_pixel vga_background_to_pixel_colour(char colour)
+{
+    static const struct framebuffer_pixel vga_palette[16] =
+    {
+        {0x00, 0x00, 0x00, 0}, // BLACK
+        {0xAA, 0x00, 0x00, 0}, // BLUE
+        {0x00, 0xAA, 0x00, 0}, // GREEN
+        {0xAA, 0xAA, 0x00, 0}, // CYAN
+        {0x00, 0x00, 0xAA, 0}, // RED
+        {0xAA, 0x00, 0xAA, 0}, // MAGENTA
+        {0x00, 0x55, 0xAA, 0}, // BROWN
+        {0xAA, 0xAA, 0xAA, 0}, // LIGHT_GREY
+        {0x55, 0x55, 0x55, 0}, // DARK_GREY
+        {0xFF, 0x55, 0x55, 0}, // LIGHT_BLUE
+        {0x55, 0xFF, 0x55, 0}, // LIGHT_GREEN
+        {0xFF, 0xFF, 0x55, 0}, // LIGHT_CYAN
+        {0x55, 0x55, 0xFF, 0}, // LIGHT_RED
+        {0xFF, 0x55, 0xFF, 0}, // LIGHT_MAGENTA
+        {0x55, 0xFF, 0xFF, 0}, // YELLOW
+        {0xFF, 0xFF, 0xFF, 0}, // WHITE
+    };
+
+    return vga_palette[colour >> 4 & 0x0F];
+}
+
 void terminal_clear_color_and_reset_cursor(char colour)
 {
-    for (int y = 0; y < VGA_HEIGHT; y++)
-    {
-        for (int x = 0; x < VGA_WIDTH; x++)
-        {
-            terminal_putchar(x, y, ' ', colour);
-        }
-    }
+    if (!system_terminal)
+        return;
 
-    terminal_row = 0;
-    terminal_column = 0;
+    system_terminal->font_color =
+        vga_foreground_to_pixel_colour(colour);
+
+    struct framebuffer_pixel bg =
+        vga_background_to_pixel_colour(colour);
+
+    terminal_clear(system_terminal, bg);
 }

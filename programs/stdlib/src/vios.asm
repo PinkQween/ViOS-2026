@@ -9,6 +9,7 @@ global vios_process_load_start:function
 global vios_invoke_system_command:function
 global vios_process_get_arguments:function
 global vios_exit:function
+global vios_fopen:function
 
 vios_print:
     push qword rdi
@@ -67,4 +68,12 @@ vios_process_get_arguments:
 vios_exit:
     mov rax, 8 ; SYSTEM_COMMAND8_EXIT
     int 0x80
+    ret
+
+vios_fopen:
+    mov rax, 9
+    push qword rsi
+    push qword rdi
+    int 0x80
+    add rsp, 16
     ret

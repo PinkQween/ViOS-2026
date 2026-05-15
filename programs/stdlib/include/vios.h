@@ -117,4 +117,6 @@ int vios_system_run(const char* command);
  */
 void vios_exit(int exit_code);
 
+int vios_fopen(const char* filename, const char* mode);
+
 #endif

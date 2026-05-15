@@ -88,6 +88,13 @@ struct keyboard_buffer
     int tail;
 };
 
+struct process_file_handle
+{
+    int fd;
+    char filepath[MAX_PATH];
+    char mode[2];
+};
+
 /**
  * @brief Represents a loaded user-space process.
  */
@@ -117,6 +124,7 @@ struct process
      * @brief Tracked allocations owned by this process.
      */
     struct process_allocation allocations[MAX_PROGRAM_ALLOCATIONS];
+    struct vector* file_handles;
 
     /**
      * @brief Executable type.
@@ -403,5 +411,15 @@ status_t process_inject_arguments(
     struct process* process,
     struct command_argument* root_arg
 );
+
+/**
+ * 
+ */
+status_t process_fopen(struct process* process, const char* filepath, const char* mode);
+
+/**
+ * 
+ */
+struct process_file_handle* process_get_file_handle(struct process* process, int fd);
 
 #endif /* PROCESS_H */

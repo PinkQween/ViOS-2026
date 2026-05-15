@@ -64,6 +64,12 @@ target("libvios")
         )
 
         os.exec(
+            "gcc " .. cflags ..
+            "programs/stdlib/src/file.c " ..
+            "-o programs/stdlib/build/file.o"
+        )
+
+        os.exec(
             "ar rcs programs/stdlib/build/libvios.a " ..
             "programs/stdlib/build/start.o " ..
             "programs/stdlib/build/vios.asm.o " ..
@@ -71,7 +77,8 @@ target("libvios")
             "programs/stdlib/build/vios.o " ..
             "programs/stdlib/build/stdlib.o " ..
             "programs/stdlib/build/stdio.o " ..
-            "programs/stdlib/build/string.o"
+            "programs/stdlib/build/string.o " ..
+            "programs/stdlib/build/file.o"
         )
     end)
 target_end()

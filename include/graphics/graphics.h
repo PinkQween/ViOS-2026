@@ -62,10 +62,21 @@ struct graphics_info
     } event_hanlders;
 };
 
+/* Forward declare struct image to allow using pointers in prototypes */
+struct image;
+
 void graphics_draw_pixel(struct graphics_info* graphics_info, uint32_t x, uint32_t y, struct framebuffer_pixel pixel);
 void graphics_redraw(struct graphics_info* graphics_info);
 struct graphics_info* graphics_screen_info();
 void graphics_setup(struct graphics_info* main_graphics_info);
 void graphics_redraw_all();
+void graphics_draw_image(struct graphics_info* graphics_info, struct image* image, int x, int y);
+void graphics_redraw_graphics_to_screen(struct graphics_info* graphics_info, size_t x, size_t y, size_t width, size_t height);
+void graphics_draw_rect(struct graphics_info* graphics_info, uint32_t x, uint32_t y, size_t width, size_t height, struct framebuffer_pixel pixel_color);
+void graphics_ignore_color(struct graphics_info* graphics_info, struct framebuffer_pixel pixel_color);
+void graphics_ignore_color_finish(struct graphics_info* graphics_info);
+void graphics_transparency_key_set(struct graphics_info* graphics_info, struct framebuffer_pixel pixel_color);
+void graphics_transparency_key_remove(struct graphics_info* graphics_info);
+void graphics_clear_hardware(struct framebuffer_pixel color);
 
 #endif /* GRAPHICS_H */

@@ -31,6 +31,10 @@ int fat16_get_total_items_for_directory(struct disk* disk, uint32_t directory_st
             continue;
         }
 
+        if (entry.attributes == 0x0F) {
+            continue;
+        }
+
         total_items++;
     }
 
@@ -78,12 +82,15 @@ status_t fat16_get_root_directory(struct disk* disk, struct fat16_internal* fat_
     return STATUS_OK;
 }
 
-void fat16_to_proper_string(char** dest, const char* src)
+static void fat16_to_proper_string(char** dest, const char* src, size_t max_len)
 {
-    while (*src != '\0' && *src != ' ') {
-        **dest = *src;
+    for (size_t i = 0; i < max_len; i++) {
+        if (src[i] == '\0' || src[i] == ' ') {
+            break;
+        }
+
+        **dest = src[i];
         (*dest)++;
-        src++;
     }
 
     **dest = '\0';
@@ -94,12 +101,12 @@ void fat16_get_full_relative_filename(struct fat_directory_entry* entry, char* o
     memset(out, 0x00, max_len);
     char* out_ptr = out;
 
-    fat16_to_proper_string(&out_ptr, (char*)entry->name);
+    fat16_to_proper_string(&out_ptr, (char*)entry->name, sizeof(entry->name));
 
     if (entry->extension[0] != ' ' && entry->extension[0] != '\0') {
         *out_ptr = '.';
         out_ptr++;
-        fat16_to_proper_string(&out_ptr, (char*)entry->extension);
+        fat16_to_proper_string(&out_ptr, (char*)entry->extension, sizeof(entry->extension));
     }
 }
 
@@ -216,6 +223,14 @@ struct fat16_item* fat16_find_item_in_directory(struct disk* disk, struct fat16_
     char tmp_filename[MAX_PATH];
 
     for (int i = 0; i < directory->entry_count; i++) {
+        if (directory->entries[i].name[0] == 0x00 || directory->entries[i].name[0] == 0xE5) {
+            continue;
+        }
+
+        if (directory->entries[i].attributes == 0x0F) {
+            continue;
+        }
+
         fat16_get_full_relative_filename(&directory->entries[i], tmp_filename, sizeof(tmp_filename));
 
         if (istrncmp(tmp_filename, name, sizeof(tmp_filename)) == 0) {
@@ -233,6 +248,7 @@ struct fat16_item* fat16_get_directory_entry(struct disk* disk, struct path_part
     }
 
     struct fat16_internal* fat_internal = disk->fs_internal;
+
     struct fat16_item* current_item = fat16_find_item_in_directory(disk, &fat_internal->root_directory, path->name);
 
     if (!current_item) {
@@ -246,7 +262,6 @@ struct fat16_item* fat16_get_directory_entry(struct disk* disk, struct path_part
             fat16_free_item(current_item);
             return NULL;
         }
-
         struct fat16_item* next_item = fat16_find_item_in_directory(disk, current_item->directory, next_part->name);
         fat16_free_directory(current_item->directory);
         current_item = next_item;

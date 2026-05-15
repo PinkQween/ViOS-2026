@@ -25,6 +25,8 @@
 
 #include "console/console.h"
 
+#include "vector/vector.h"
+
 #include "stdint.h"
 #include "stddef.h"
 #include "stdbool.h"
@@ -47,6 +49,7 @@ void* process_virtual_address_to_physical(
 static void process_init(struct process* process)
 {
     memset(process, 0, sizeof(struct process));
+    process->file_handles = vector_new(sizeof(struct process_file_handle*), 4, 0);
 }
 
 struct process* process_current()
@@ -632,6 +635,34 @@ void process_free_elf_data(
     }
 }
 
+status_t process_close_file_handles(struct process* process)
+{
+    if (!process || !process->file_handles)
+    {
+        return STATUS_ERR(EINVAL);
+    }
+
+    size_t total_handles = vector_count(process->file_handles);
+    
+    for (size_t i = 0; i < total_handles; i++)
+    {
+        struct process_file_handle* handle = NULL;
+
+        vector_at(process->file_handles, i, &handle, sizeof(struct process_file_handle*));
+
+        if (handle)
+        {
+            fclose(handle->fd);
+            kfree(handle);
+        }
+    }
+
+    vector_free(process->file_handles);
+    process->file_handles = NULL;
+
+    return STATUS_OK;
+}
+
 status_t process_free_program_data(
     struct process* process
 )
@@ -687,6 +718,14 @@ status_t process_terminate(
 
     status_t res =
         process_free_program_data(process);
+
+    if (status_is_error(res))
+    {
+        return res;
+    }
+
+    res = process_close_file_handles(process);
+
 
     if (status_is_error(res))
     {
@@ -918,4 +957,59 @@ status_t process_load_switch(
     }
 
     return process_switch(*process_out);
+}
+
+status_t process_fopen(struct process* process, const char* filepath, const char* mode)
+{
+    if (!process || !filepath || !mode)
+    {
+        return STATUS_ERR(EINVAL);
+    }
+
+    status_t fd = fopen(filepath, mode);
+
+    if (status_is_error(fd))
+    {
+        return fd;
+    }
+
+    struct process_file_handle* handle = kzalloc(sizeof(struct process_file_handle));
+
+    if (!handle)
+    {
+        fclose(fd);
+        return STATUS_ERR(ENOMEM);
+    }
+
+    handle->fd = fd;
+    strncpy(handle->filepath, filepath, sizeof(handle->filepath));
+    strncpy(handle->mode, mode, sizeof(handle->mode));
+
+    vector_push(process->file_handles, &handle);
+
+    return fd;
+}
+
+struct process_file_handle* process_get_file_handle(struct process* process, int fd)
+{
+    if (!process || !process->file_handles)
+    {
+        return NULL;
+    }
+
+    size_t total_handles = vector_count(process->file_handles);
+
+    for (size_t i = 0; i < total_handles; i++)
+    {
+        struct process_file_handle* handle = NULL;
+
+        vector_at(process->file_handles, i, &handle, sizeof(struct process_file_handle*));
+
+        if (handle && handle->fd == fd)
+        {
+            return handle;
+        }
+    }
+
+    return NULL;
 }

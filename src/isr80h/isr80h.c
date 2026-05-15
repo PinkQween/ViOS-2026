@@ -2,6 +2,7 @@
 #include "isr80h/io.h"
 #include "isr80h/heap.h"
 #include "isr80h/process.h"
+#include "isr80h/file.h"
 #include "idt/idt.h"
 
 void isr80h_register_commands()
@@ -15,4 +16,5 @@ void isr80h_register_commands()
     isr80h_register_command(SYSTEM_COMMAND6_INVOKE_SYSTEM_COMMAND, isr80h_command6_invoke_system_command);
     isr80h_register_command(SYSTEM_COMMAND7_GET_PROCESS_ARGUMENTS, isr80h_command7_get_process_arguments);
     isr80h_register_command(SYSTEM_COMMAND8_EXIT, isr80h_command8_exit);
+    isr80h_register_command(SYSTEM_COMMAND9_FOPEN, isr80h_command9_fopen);
 }

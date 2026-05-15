@@ -146,6 +146,7 @@ status_t task_switch(struct task* task)
     }
 
     current_task = task;
+    current_process = task->process;
 
     paging_switch(task->process->paging_desc);
 
